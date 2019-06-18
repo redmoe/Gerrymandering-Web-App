@@ -67,6 +67,7 @@ function update(timestamp){
 	if (districts[0]!=0) {
 		console.log("ran");
 		diamond_fill();
+		 release_non_contiguous();
 	}
 	
 
@@ -167,8 +168,8 @@ function InitializeGrid() {
 		for (y=0; y<gridHeight; y++) {
 			ctx.fillStyle=(x+y)%2==0 ? "#000000" : "#505050";
 			ctx.fillRect(x*gridSize,y*gridSize,50,50);
-			grid[x][y]={votes:0,district:0,winner:0,x:x,y:y};
-			districtPositions[0].push(grid[x][y])
+			grid[x][y]={votes:0,district:0,winner:0,x:x,y:y,flag:0};
+		//	districtPositions[0].push(grid[x][y])
 		}
 	}
 }
@@ -259,20 +260,35 @@ function FloodDistricts(num_districts) {
   	}
 }
 
-function FloodFill(posx,posy,target,replace,amount) {
-  var pos=GetGridProperty(posx,posy,"district")
-  if (pos == null || pos!=target || amount==0) return amount;
-  grid[posx][posy].district=replace;
-  amount--;
-  GraphicStack();
-  var order=[0,1,2,3];
- /// order=shuffle(order);
-  for (var f=0; f<4;f++) {
-    amount=FloodFill(posx+dirX[order[f]], posy+dirY[order[f]], target, replace,amount); 
-    if (amount==0) return amount;
-  }
-  return amount  
-}
+// function FloodFill(posx,posy,target,replace,amount) {
+//   var pos=GetGridProperty(posx,posy,"district")
+//   if (pos == null || pos!=target || amount==0) return amount;
+//   grid[posx][posy].district=replace;
+//   amount--;
+//   GraphicStack();
+//   var order=[0,1,2,3];
+//  /// order=shuffle(order);
+//   for (var f=0; f<4;f++) {
+//     amount=FloodFill(posx+dirX[order[f]], posy+dirY[order[f]], target, replace,amount); 
+//     if (amount==0) return amount;
+//   }
+//   return amount  
+// }
+
+// function FloodFill(posx,posy,target,replace,Tproperty,Rproperty) {
+//   var pos=GetGridProperty(posx,posy,property)
+//   if (pos == null || pos!=target || amount==0) return amount;
+//   grid[posx][posy][property]=replace;
+//  // amount--;
+//  // GraphicStack();
+//   //var order=[0,1,2,3];
+//  /// order=shuffle(order);
+//   for (var f=0; f<4;f++) {
+//     amount=FloodFill(posx+dirX[order[f]], posy+dirY[order[f]], target, replace, property); 
+//     if (amount==0) return amount;
+//   }
+//   return amount  
+// }
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -329,7 +345,9 @@ function seed_districts() {
 
 
 function diamond_fill() {
-	var order=districtPositions.sort(function(a, b){
+	let order=JSON.parse(JSON.stringify(districtPositions));
+
+	order.sort(function(a, b){
 		if (a.length==0) {
 			return 1
 		}
@@ -342,12 +360,15 @@ function diamond_fill() {
 		// (a.length==0 ? return -1 : return a.length-b.length
 
 	})
-	console.log(order);
-	console.log(order[0])
+	//console.log(districtPositions);
+//	console.log(order);
+	//console.log(order[0])
 	// do
-	r=Math.floor(Math.random()*order[0].length)
-	// while GetSig(r)
-	fill_neighbors(order[0][r].x,order[0][r].y,order[0][r].district)
+	//if (order[0][0].district==0) 
+	console.log(order[0][0].district);
+	 r=Math.floor(Math.random()*order[0].length)
+	// // while GetSig(r)
+	 fill_neighbors(order[0][r].x,order[0][r].y,order[0][r].district)
 	// for (var d=1; d<districtCount-1;d++) {
 	// let borderDistricts=[];
 	// //borderDistricts[0]=[]
@@ -404,6 +425,46 @@ function diamond_fill() {
 	// }
 }
 
+//var flags=[]
+function release_non_contiguous() {
+	curf=1
+	for (var x=0; x<gridWidth; x++) {
+		for (var y=0; y<gridHeight; y++) {
+			grid[x][y].flag=0
+		}
+	}	
+	for (var d=0; d<districtCount; d++) {
+		for (var x=0; x<gridWidth; x++) {
+			for (var y=0; y<gridHeight; y++) {
+				if (grid[x][y].district!=0 && grid[x][y].flag==0) {
+					grow_contiguous_district(x,y,grid[x][y].district,curf)
+					curf+=1
+				}
+			}
+		}
+	}
+	grid_stack();
+}
+function grow_contiguous_district(posx,posy,target,replace) {
+  var pos=GetGridProperty(posx,posy)
+  if (pos == null || pos.flag==replace || pos.district!=target) return;
+  grid[posx][posy].flag=replace;
+  for (var f=0; f<4;f++) {
+    amount=grow_contiguous_district(posx+dirX[f], posy+dirY[f],target, replace); 
+  }
+}
+
+function grid_stack() {
+  // console.clear();
+  var message="";
+  for (var x=0; x<16; x++) {
+    message+="\n"
+    for (var y=0; y<16; y++) {
+      message+=grid[x][y].flag+" ";
+    }
+  }
+  console.log(message);
+}
 function fill_neighbors(x,y,target,replace) {
 	var order=[0,1,2,3]
 	order=shuffle(order);
@@ -414,11 +475,12 @@ function fill_neighbors(x,y,target,replace) {
 function fill_self(x,y,replace) {
 
 	var self=GetGridProperty(x,y)
-			console.log(self);
+	//console.log(self);
 
 	if (self==null || self.district==replace) return
 	districts[self.district]--;
 	districts[replace]++;
+	console.log("Filled");
 	districtPositions[self.district].splice(districtPositions[self.district].indexOf(self),1);
 	districtPositions[replace].push(self)
 	self.district=replace;
