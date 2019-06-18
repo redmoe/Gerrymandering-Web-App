@@ -7,7 +7,9 @@ var voters=[];
 
 var gridWidth=16;
 var gridHeight=16;
-var gridSize=50;
+var gridSize=30;
+c.height=gridHeight*gridSize;
+c.width=gridWidth*gridSize
 
 // var districtColors=["#FA8072","#228B22","#87CEEB","#FF00FF","#FF1493","	#2F4F4F","#FFDEAD"]
 
@@ -31,7 +33,7 @@ var republicanWins=0;
 var democratWins=0;
 
 function CreateVoters (number,party) {
-	for (i=0;i<number;i++) {
+	for (var i=0;i<number;i++) {
 		var x=Math.random()*gridWidth;
 		var y=Math.random()*gridHeight;
 		// ctx.fillText(icon, x*gridSize, y*gridSize);
@@ -65,12 +67,11 @@ var drawGame=true
 //runs every frame
 function update(timestamp){
 	if (districts[0]!=0) {
-		console.log("ran");
+		//console.log("ran");
 		diamond_fill();
+  //  console.log(districts[0])
 		 release_non_contiguous();
 	}
-	
-
 	if (drawGame) {
 		drawGame=false;
 		setTimeout(draw,.1)
@@ -80,11 +81,11 @@ function update(timestamp){
 
 //runs at a set time
 function draw() {
-	var frame=grid;
+	var frame=grida;
 	if (graphicBuffer.length!=0) {
 		frame=graphicBuffer.shift();
 		DrawDistricts(frame);
-		console.log("buffering");
+	//	console.log("buffering");
 		drawGame=true;
 	}
 	else {
@@ -92,12 +93,12 @@ function draw() {
 		//var txt = document.getElementById("win");
 		//txt.innerHTML="R "+republicanWins+" to D "+democratWins+". "+(democratWins>republicanWins ? "Democrats" : "Republicans")+" win!"
 	}
-	DrawVoters(frame);
+	//DrawVoters(frame);
 }
 
 function DrawDistricts(frame) {
-	for (x=0; x<gridWidth; x++) {
-		for (y=0; y<gridHeight; y++) {
+	for (var x=0; x<gridWidth; x++) {
+		for (var y=0; y<gridHeight; y++) {
 			if (frame[x][y].district!=0) {
 				ctx.fillStyle=districtColors[frame[x][y].district];
 			}
@@ -105,13 +106,16 @@ function DrawDistricts(frame) {
 				ctx.fillStyle=(x+y)%2==0 ? "#000000" : "#505050";
 			}
 			ctx.fillRect(x*gridSize,y*gridSize,50,50);
+      ctx.fillStyle="white"
+      //"("+x+" "+y+") "+
+      ctx.fillText(frame[x][y].flag,x*gridSize,y*gridSize+gridSize)
 		}
 	}
 }
 
 function DrawVoters(frame) {
 	voters.forEach(function(v) {
-		ctx.font = "30px Arial";
+		ctx.font = (gridSize/1.25)+"px Arial";
 		var icon="?"
 		if (v.party>0) {
 			icon="R"
@@ -126,14 +130,14 @@ function DrawVoters(frame) {
 }
 
 function DistrictWinners() {
-	for (x=0; x<gridWidth; x++) {
-		for (y=0; y<gridHeight; y++) {
+	for (var x=0; x<gridWidth; x++) {
+		for (var y=0; y<gridHeight; y++) {
 			if (grid[x][y].district!=0) {
 				polls[grid[x][y].district]+=grid[x][y].votes;
 			}
 		}
 	}
-	for (f=1; f<polls.length; f++) {
+	for (var f=1; f<polls.length; f++) {
 		polls[f]=Math.round(polls[f]);
 		if (polls[f]>0) {
 			republicanWins++;
@@ -150,8 +154,8 @@ function DistrictWinners() {
 }
 
 function DrawWinners() {
-	for (x=0; x<gridWidth; x++) {
-		for (y=0; y<gridHeight; y++) {
+	for (var x=0; x<gridWidth; x++) {
+		for (var y=0; y<gridHeight; y++) {
 			if (grid[x][y].district!=0) {
 				ctx.fillStyle= grid[x][y].winner>0 ? rgb(grid[x][y].district*32+20,0,0) : rgb(0,0,grid[x][y].district*32+20);
 				ctx.fillRect(x*gridSize,y*gridSize,50,50);
@@ -163,9 +167,9 @@ function DrawWinners() {
 
 //create a checkerboard two dimensional array grid 
 function InitializeGrid() {
-	for (x=0; x<gridWidth; x++) {
+	for (var x=0; x<gridWidth; x++) {
 		grid[x]=[]
-		for (y=0; y<gridHeight; y++) {
+		for (var y=0; y<gridHeight; y++) {
 			ctx.fillStyle=(x+y)%2==0 ? "#000000" : "#505050";
 			ctx.fillRect(x*gridSize,y*gridSize,50,50);
 			grid[x][y]={votes:0,district:0,winner:0,x:x,y:y,flag:0};
@@ -189,7 +193,7 @@ function SnakeWorm() {
 	grid[worm.x][worm.y].district=true;
 	if (GetGridProperty(worm.x+worm.dx,worm.y+worm.dy,"district")==true) {
 		var foundValid=false;
-		for (i=0; i<4; i++) {
+		for (var i=0; i<4; i++) {
 			worm.dx=dirX[i];
 			worm.dy=dirY[i];
 			if (GetGridProperty(worm.x+worm.dx,worm.y+worm.dy,"district")==false) {
@@ -210,8 +214,8 @@ function SnakeWorm() {
 }
 
 function ColorPatches() {
-	for (x=0; x<gridWidth; x++) {
-		for (y=0; y<gridHeight; y++) {
+	for (var x=0; x<gridWidth; x++) {
+		for (var y=0; y<gridHeight; y++) {
 			//if no one then black else republican red else blue
 			ctx.fillStyle=grid[x][y]==0 ? "#000000" : grid[x][y] < 0 ? "#FF0000" : "#0000FF";
 			ctx.fillRect(x*gridSize,y*gridSize,50,50);
@@ -251,7 +255,7 @@ function FloodDistricts(num_districts) {
     	var rx=0;
   		var ry=0;
     	do {
-    		r=RandomGridPosition()
+    		let r=RandomGridPosition()
       		safetyBreak++;
     	} while (grid[r.x][r.y].district!=0 && safetyBreak<1000)
     	safetyBreak=0;
@@ -309,7 +313,7 @@ function FillHoles(replace) {
 }
 function GraphicStack() {
 	// let frame=grid.slice(0);
-	frame=JSON.parse(JSON.stringify(grid));
+	let frame=JSON.parse(JSON.stringify(grid));
 	graphicBuffer.push(frame);
 }  
 function GetSig(x,y,type) {
@@ -335,6 +339,7 @@ function rgb(r, g, b){
 }
 function seed_districts() {
 	for (var d=1; d<districtCount+1;d++) {
+    let r=0
 		do {
 			r=RandomGridPosition()
 			safetyBreak++
@@ -365,8 +370,8 @@ function diamond_fill() {
 	//console.log(order[0])
 	// do
 	//if (order[0][0].district==0) 
-	console.log(order[0][0].district);
-	 r=Math.floor(Math.random()*order[0].length)
+	//console.log(order[0][0].district);
+	 let r=Math.floor(Math.random()*order[0].length)
 	// // while GetSig(r)
 	 fill_neighbors(order[0][r].x,order[0][r].y,order[0][r].district)
 	// for (var d=1; d<districtCount-1;d++) {
@@ -425,9 +430,11 @@ function diamond_fill() {
 	// }
 }
 
-//var flags=[]
+var flagZones=[]
 function release_non_contiguous() {
-	curf=1
+	let curf=1
+  flagZones=[]
+//  var flagTypes=[]
 	for (var x=0; x<gridWidth; x++) {
 		for (var y=0; y<gridHeight; y++) {
 			grid[x][y].flag=0
@@ -437,20 +444,50 @@ function release_non_contiguous() {
 		for (var x=0; x<gridWidth; x++) {
 			for (var y=0; y<gridHeight; y++) {
 				if (grid[x][y].district!=0 && grid[x][y].flag==0) {
+          flagZones[curf]=[]
+         // flagTypes[curf]=gridDistrict
 					grow_contiguous_district(x,y,grid[x][y].district,curf)
 					curf+=1
 				}
 			}
 		}
 	}
+ //console.log(flagZones)
+  for (var f=1; f< flagZones.length-1;f++) {
+    let f1=flagZones[f]
+    let f2=flagZones[f+1]
+   // console.log(f1)
+    if (f1[0] && f2[0]) {
+     if (f1[0].district==f2[0].district) {
+        if (f1.length>f2.length) {
+          while (f2.length!=0) {
+            //console.log("looped");
+            var tile=f2.pop()
+            console.log("popped "+tile.x+" "+tile.y)
+              fill_self(tile.x,tile.y,0);
+            
+          }
+        }
+        else {
+          while (f1.length!=0) {
+            var tile=f1.pop()
+            console.log("popped "+tile.x+" "+tile.y)
+            fill_self(tile.x,tile.y,0);
+          }        
+        }
+      }   
+    }
+  }
+ // console.log("end")
 	grid_stack();
 }
 function grow_contiguous_district(posx,posy,target,replace) {
   var pos=GetGridProperty(posx,posy)
   if (pos == null || pos.flag==replace || pos.district!=target) return;
   grid[posx][posy].flag=replace;
+  flagZones[replace].push(pos);
   for (var f=0; f<4;f++) {
-    amount=grow_contiguous_district(posx+dirX[f], posy+dirY[f],target, replace); 
+    grow_contiguous_district(posx+dirX[f], posy+dirY[f],target, replace); 
   }
 }
 
@@ -463,7 +500,7 @@ function grid_stack() {
       message+=grid[x][y].flag+" ";
     }
   }
-  console.log(message);
+ // console.log(message);
 }
 function fill_neighbors(x,y,target,replace) {
 	var order=[0,1,2,3]
@@ -480,7 +517,7 @@ function fill_self(x,y,replace) {
 	if (self==null || self.district==replace) return
 	districts[self.district]--;
 	districts[replace]++;
-	console.log("Filled");
+	//console.log("Filled");
 	districtPositions[self.district].splice(districtPositions[self.district].indexOf(self),1);
 	districtPositions[replace].push(self)
 	self.district=replace;
