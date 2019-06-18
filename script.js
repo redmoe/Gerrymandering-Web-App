@@ -21,6 +21,7 @@ var totalDemocrats=numberOfVoters*democratPercentage;
 
 var districtCount=7;
 var districts=[gridWidth*gridHeight,0,0,0,0,0,0,0]
+var districtPositions=[[],[],[],[],[],[],[],[],[]]
 var polls=    [-1,0,0,0,0,0,0,0]
 
 var dirX=[1,-1,0,0];
@@ -166,7 +167,8 @@ function InitializeGrid() {
 		for (y=0; y<gridHeight; y++) {
 			ctx.fillStyle=(x+y)%2==0 ? "#000000" : "#505050";
 			ctx.fillRect(x*gridSize,y*gridSize,50,50);
-			grid[x][y]={votes:0,district:0,winner:0};
+			grid[x][y]={votes:0,district:0,winner:0,x:x,y:y};
+			districtPositions[0].push(grid[x][y])
 		}
 	}
 }
@@ -321,39 +323,58 @@ function seed_districts() {
 			r=RandomGridPosition()
 			safetyBreak++
 		} while (grid[r.x][r.y].district!=0 && safetyBreak<10)
-		fill_self(r.x,r.y,0,d)
+		fill_self(r.x,r.y,d)
 	}	
 }
 
 
 function diamond_fill() {
-	// for (var d=1; d<districtCount-1;d++) {
-	let borderDistricts=[];
-	//borderDistricts[0]=[]
-	for (d=1; d<districts.length; d++) {
-		borderDistricts[d-1]={number:d-1,tiles:[]}
-	}
-	//console.log(borderDistricts)
-	for (x=0; x<gridWidth; x++) {
-		for (y=0; y<gridHeight; y++) {
-			var dis=grid[x][y].district;
-			//console.log(dis)
-			if (dis!=0 && GetSig(x,y,dis)<4) {
-				borderDistricts[dis-1].tiles.push({x:x,y:y})
-			}
+	var order=districtPositions.sort(function(a, b){
+		if (a.length==0) {
+			return 1
 		}
-	}
-	do {
-		borderDistricts=borderDistricts.sort(function(a,b){return a.tiles.length-b.tiles.length});
-	 	r=borderDistricts[0].tiles[Math.floor(Math.random()*borderDistricts[0].tiles.length)]
-	 	console.log(borderDistricts);
-	 	if (r==null) return;
-	 	fill_neighbors(r.x,r.y,0,borderDistricts[0].number+1);
-	 	borderDistricts[0].tiles.splice(r,1);
-	 	while (borderDistricts.length!=0 && borderDistricts[0].tiles.length==0) {
-	 		borderDistricts.shift();
-	 	}
-	} while (borderDistricts.length!=0 && safetyBreak<100)
+		else if (b.length==0) {
+			return -1
+		}
+		else {
+			return a.length-b.length
+		}
+		// (a.length==0 ? return -1 : return a.length-b.length
+
+	})
+	console.log(order);
+	console.log(order[0])
+	// do
+	r=Math.floor(Math.random()*order[0].length)
+	// while GetSig(r)
+	fill_neighbors(order[0][r].x,order[0][r].y,order[0][r].district)
+	// for (var d=1; d<districtCount-1;d++) {
+	// let borderDistricts=[];
+	// //borderDistricts[0]=[]
+	// for (d=1; d<districts.length; d++) {
+	// 	borderDistricts[d-1]={number:d-1,tiles:[]}
+	// }
+	// //console.log(borderDistricts)
+	// for (x=0; x<gridWidth; x++) {
+	// 	for (y=0; y<gridHeight; y++) {
+	// 		var dis=grid[x][y].district;
+	// 		//console.log(dis)
+	// 		if (dis!=0 && GetSig(x,y,dis)<4) {
+	// 			borderDistricts[dis-1].tiles.push({x:x,y:y})
+	// 		}
+	// 	}
+	// }
+	// do {
+	// 	borderDistricts=borderDistricts.sort(function(a,b){return a.tiles.length-b.tiles.length});
+	//  	r=borderDistricts[0].tiles[Math.floor(Math.random()*borderDistricts[0].tiles.length)]
+	//  	console.log(borderDistricts);
+	//  	if (r==null) return;
+	//  	fill_neighbors(r.x,r.y,0,borderDistricts[0].number+1);
+	//  	borderDistricts[0].tiles.splice(r,1);
+	//  	while (borderDistricts.length!=0 && borderDistricts[0].tiles.length==0) {
+	//  		borderDistricts.shift();
+	//  	}
+	// } while (borderDistricts.length!=0 && safetyBreak<100)
 	//console.log("ended");
 	//console.log(borderDistricts.sort(function(a, b){return a.length-b.length}))
 	//var sort=[1,2,3,4,5,6,7,8]
@@ -377,10 +398,10 @@ function diamond_fill() {
 	// 	}
 	// 	safetyBreak++;
 	// } while (order.length!=0 && safetyBreak<100)
-	if (safetyBreak>100) {
-		safetyBreak=0
-		console.log("broke");
-	}
+	// if (safetyBreak>100) {
+	// 	safetyBreak=0
+	// 	console.log("broke");
+	// }
 }
 
 function fill_neighbors(x,y,target,replace) {
@@ -390,12 +411,16 @@ function fill_neighbors(x,y,target,replace) {
     	fill_self(x+dirX[order[f]], y+dirY[order[f]], target, replace); 
   	}
 }
-function fill_self(x,y,target,replace) {
+function fill_self(x,y,replace) {
 
 	var self=GetGridProperty(x,y)
+			console.log(self);
+
 	if (self==null || self.district==replace) return
-	districts[target]--;
+	districts[self.district]--;
 	districts[replace]++;
+	districtPositions[self.district].splice(districtPositions[self.district].indexOf(self),1);
+	districtPositions[replace].push(self)
 	self.district=replace;
 	GraphicStack();
 }
