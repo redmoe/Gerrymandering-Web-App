@@ -67,33 +67,34 @@ var drawGame=true
 //runs every frame
 function update(timestamp){
 	if (districts[0]!=0) {
-		//console.log("ran");
+	
 		diamond_fill();
-  //  console.log(districts[0])
+      console.log(districts[0])
 		 release_non_contiguous();
 	}
 	if (drawGame) {
 		drawGame=false;
-		setTimeout(draw,.1)
+		setTimeout(draw,0)
 	}
 	requestAnimationFrame(update);	
 }
 
 //runs at a set time
 function draw() {
-	var frame=grida;
+	var frame=grid;
 	if (graphicBuffer.length!=0) {
 		frame=graphicBuffer.shift();
 		DrawDistricts(frame);
 	//	console.log("buffering");
-		drawGame=true;
 	}
-	else {
+		drawGame=true;
+	//}
+	//else {
 		//DrawWinners();
 		//var txt = document.getElementById("win");
 		//txt.innerHTML="R "+republicanWins+" to D "+democratWins+". "+(democratWins>republicanWins ? "Democrats" : "Republicans")+" win!"
-	}
-	//DrawVoters(frame);
+	//}
+	DrawVoters(frame);
 }
 
 function DrawDistricts(frame) {
@@ -351,7 +352,6 @@ function seed_districts() {
 
 function diamond_fill() {
 	let order=JSON.parse(JSON.stringify(districtPositions));
-
 	order.sort(function(a, b){
 		if (a.length==0) {
 			return 1
@@ -369,11 +369,14 @@ function diamond_fill() {
 //	console.log(order);
 	//console.log(order[0])
 	// do
-	//if (order[0][0].district==0) 
-	//console.log(order[0][0].district);
-	 let r=Math.floor(Math.random()*order[0].length)
+	let chosen=order[0]
+	if (chosen[0].district==0) {
+		chosen=order[1];
+	}
+	//console.log(chosen[0].district);
+	 let r=Math.floor(Math.random()*chosen.length)
 	// // while GetSig(r)
-	 fill_neighbors(order[0][r].x,order[0][r].y,order[0][r].district)
+	 fill_neighbors(chosen[r].x,chosen[r].y,chosen[r].district)
 	// for (var d=1; d<districtCount-1;d++) {
 	// let borderDistricts=[];
 	// //borderDistricts[0]=[]
@@ -433,7 +436,7 @@ function diamond_fill() {
 var flagZones=[]
 function release_non_contiguous() {
 	let curf=1
-  flagZones=[]
+    flagZones=[]
 //  var flagTypes=[]
 	for (var x=0; x<gridWidth; x++) {
 		for (var y=0; y<gridHeight; y++) {
@@ -444,8 +447,8 @@ function release_non_contiguous() {
 		for (var x=0; x<gridWidth; x++) {
 			for (var y=0; y<gridHeight; y++) {
 				if (grid[x][y].district!=0 && grid[x][y].flag==0) {
-          flagZones[curf]=[]
-         // flagTypes[curf]=gridDistrict
+          			flagZones[curf]=[]
+         		// flagTypes[curf]=gridDistrict
 					grow_contiguous_district(x,y,grid[x][y].district,curf)
 					curf+=1
 				}
@@ -453,17 +456,20 @@ function release_non_contiguous() {
 		}
 	}
  //console.log(flagZones)
-  for (var f=1; f< flagZones.length-1;f++) {
+  for (var f=1; f<flagZones.length;f++) {
+  	for (var l=f+1; l<flagZones.length; l++) {
     let f1=flagZones[f]
-    let f2=flagZones[f+1]
-   // console.log(f1)
+    let f2=flagZones[l]
+    //console.log(f+" "+l)
+   // console.log(flagZones.length)
+    //console.log(f2)
     if (f1[0] && f2[0]) {
      if (f1[0].district==f2[0].district) {
         if (f1.length>f2.length) {
           while (f2.length!=0) {
             //console.log("looped");
             var tile=f2.pop()
-            console.log("popped "+tile.x+" "+tile.y)
+            //console.log("popped "+tile.x+" "+tile.y)
               fill_self(tile.x,tile.y,0);
             
           }
@@ -471,11 +477,12 @@ function release_non_contiguous() {
         else {
           while (f1.length!=0) {
             var tile=f1.pop()
-            console.log("popped "+tile.x+" "+tile.y)
+            //console.log("popped "+tile.x+" "+tile.y)
             fill_self(tile.x,tile.y,0);
           }        
         }
       }   
+  	}
     }
   }
  // console.log("end")
@@ -505,6 +512,7 @@ function grid_stack() {
 function fill_neighbors(x,y,target,replace) {
 	var order=[0,1,2,3]
 	order=shuffle(order);
+
  	for (var f=0; f<4;f++) {
     	fill_self(x+dirX[order[f]], y+dirY[order[f]], target, replace); 
   	}
@@ -512,6 +520,9 @@ function fill_neighbors(x,y,target,replace) {
 function fill_self(x,y,replace) {
 
 	var self=GetGridProperty(x,y)
+	//console.log(self);
+	//console.log("\n"+replace);
+
 	//console.log(self);
 
 	if (self==null || self.district==replace) return
@@ -521,6 +532,7 @@ function fill_self(x,y,replace) {
 	districtPositions[self.district].splice(districtPositions[self.district].indexOf(self),1);
 	districtPositions[replace].push(self)
 	self.district=replace;
+
 	GraphicStack();
 }
 setup();
