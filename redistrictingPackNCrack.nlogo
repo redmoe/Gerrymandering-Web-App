@@ -164,7 +164,6 @@ to gerrymander
     identify-gop-wins ;;counts r-reps and sets d-win? to false
     recolor-districts ;;recolor to indicate winner and create borders around districts
     label-districts
-    ;print timer
     display
     if only-district-maps? = false [ wait 0.7 ]
     set gerrymander-results insert-item 0 gerrymander-results d-reps ;;list of districts won by gerrymandering against dems for histogram
@@ -441,14 +440,6 @@ to redistrict
     if only-district-maps? = false [ wait 0.7 ]
     set dem-wins-list insert-item 0 dem-wins-list d-reps ;;list of districts won by dems for histogram
     update-plots
-    export-view (word "randomMap " length dem-wins-list ".png")
-    file-open "RandomElectionOutcomes.txt"
-      file-write d-reps
-    file-close
-    file-open "RandomTimes.txt"
-      file-write timer
-    file-close
-    reset-timer
     set total-ties total-ties + ties
     set total-ties-to-wins total-ties-to-wins + ties-to-wins
     set reseed? true
@@ -575,14 +566,14 @@ to make-cracked-districts
         set district [district] of myself
         set packed? [packed?] of myself
         ]
-    ]
+      ]
       if any? neighbors4 with [cracked? = true and not any? democrats-here] [
         ask neighbors4 with [packed? = false and cracked? = true and not any? democrats-here] [ ;;only take gop from cracked districts
         set pcolor [pcolor] of myself
         set district [district] of myself
         set packed? [packed?] of myself
         ]
-    ]
+      ]
     ]
   ]
   [
