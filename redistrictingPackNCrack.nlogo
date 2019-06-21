@@ -386,23 +386,6 @@ to-report gop-votes [d-num]
   report count republicans with [district = d-num]
 end
 
-
-to check-pack-and-crack
-  let d-num 1
-  while [ d-num <= num-districts ] [
-    let dem-proportion 0
-    ifelse not any? turtles with [district = d-num]
-    [ ifelse ( dem-votes d-num ) = 0 [ set dem-proportion 0 ] [ set dem-proportion 1 ] ]
-      [ set dem-proportion (dem-votes d-num) / ( count turtles with [district = d-num] ) ]
-    ask patches with [full? = true and district = d-num] [
-    ifelse dem-proportion > 0.75 [ set packed? true ] [ set packed? false ]
-    ifelse ( dem-proportion < 0.5 and dem-proportion > 0.4 ) [ set cracked? true ] [ set cracked? false ]
-    ]
-    set d-num d-num + 1
-  ]
-end
-
-
 to redistrict
   if reseed? [
     district-seed
