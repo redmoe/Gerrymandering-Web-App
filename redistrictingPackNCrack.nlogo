@@ -303,22 +303,6 @@ to salamander
   ]
 end
 
-to recheck-packed-district
-  let d-num 1
-  while [d-num <= num-districts] [
-    if any? turtles with [district = d-num and packed? = true] [
-      if count turtles with [district = d-num and packed? = true] >= (1 + equal-population-error) * (count turtles) / (num-districts) [
-        ask patches with [district = d-num] [ set full? false ]
-        create-packed-district
-      ]
-      if (count democrats with [district = d-num and packed? = true]) / (count turtles with [district = d-num and packed? = true]) < packed-proportion-threshold [
-        create-packed-district
-      ]
-    ]
-    set d-num d-num + 1
-  ]
-end
-
 to check-trapped
   let d-num 1
   while [d-num <= num-districts] [
