@@ -830,6 +830,13 @@ to undistrict
   set cracked? false
 end
 
+to-report prob-tie-to-dems
+
+  ifelse total-ties = 0
+  [ report "N/A" ]
+  [ report total-ties-to-wins / total-ties ]
+end
+
 to-report proportion-of-occurence [wins]
   ifelse length dem-wins-list = 0
   [ report 0 ]
