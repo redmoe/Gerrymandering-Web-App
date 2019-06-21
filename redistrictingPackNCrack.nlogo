@@ -119,7 +119,7 @@ to generate-cities
   ]
 end
 
-to gerrymander
+to gerrymanderRep
   let min-packed 0
   ifelse count democrats > count republicans
   [ set min-packed (count democrats - count republicans) * num-districts / num-voters ]
@@ -187,6 +187,76 @@ to gerrymander
 
   if only-district-maps? = false [ tick ]
 end
+
+to gerrymanderDem
+  let min-packed 0
+  ifelse count republicans > count democrats
+  [ set min-packed (count republicans - count democrats) * num-districts / num-voters ]
+  [ set min-packed 0 ]
+  let max-packed count republicans * num-districts / num-voters
+  set total-packed round ((max-packed + min-packed) / 2)
+  if reseed? [
+    district-seed
+    set reseed? false
+    set tries 0
+  ]
+  let d-num 1
+  set num-packed 0
+  while [d-num <= num-districts]
+  [
+    if any? patches with [district = d-num and packed? = true] [
+      set num-packed num-packed + 1
+    ]
+    set d-num d-num + 1
+  ]
+  if tries > 1000 [
+    if any? patches with [packed? = true] [
+      ask n-of round (count patches with [packed? = true] / 4) patches with [packed? = true] [undistrict]
+      ask patches with [packed? = true] [ set full? false]
+    ]
+    set num-packed 0
+    set tries 0
+  ]
+  while [ num-packed < total-packed or any? patches with [packed? = true and full? = false]] [
+    create-packed-district  ;;make packed district first, then don't touch it
+    set tries 0
+  ]
+  make-cracked-districts ;;builds districts by attempting to pack or crack
+  fill-holes
+  find-clusters
+  release-noncontiguous-portions
+  if (all? patches with [district > 0] [full? = true]) [ district-leftovers ] ;;fill in turtle-less black patches or gop stuck inside packed hole if that's all that's left
+  check-district-count ;; checks for capacity, if it's too big, and if a district has been completely swallowed up
+  set tries tries + 1
+  if all? patches [ full? = true and (packed? = true or cracked? = true) ] [ ;;finishing steps for stuff to look nice and make final calculations
+    identify-dem-wins ;;counts d-reps and sets d-win? to true, also flips for wins if tied
+    identify-gop-wins ;;counts r-reps and sets d-win? to false
+    recolor-districts ;;recolor to indicate winner and create borders around districts
+    label-districts
+    display
+    if only-district-maps? = false [ wait 0.7 ]
+    set gerrymander-results insert-item 0 gerrymander-results d-reps ;;list of districts won by gerrymandering against dems for histogram
+    update-plots
+    set total-ties total-ties + ties
+    set total-ties-to-wins total-ties-to-wins + ties-to-wins
+    set reseed? true
+    set num-packed 0
+    if only-district-maps? = false [ reset-ticks ]
+    ifelse num-maps-made < num-maps
+    [
+      set num-maps-made num-maps-made + 1
+      set reseed? true
+    ]
+    [
+      set num-maps-made 1
+      set reseed? true
+      stop
+    ]
+  ]
+
+  if only-district-maps? = false [ tick ]
+end
+
 
 to create-packed-district
   let d-num 1
@@ -375,8 +445,6 @@ to grow-enclaves  ;; patch procedure
     grow-enclaves
   ]
 end
-
-
 
 to-report dem-votes [d-num]
   report count democrats with [district = d-num]
@@ -879,9 +947,9 @@ ticks
 
 BUTTON
 30
-30
+50
 222
-63
+83
 Set Population Distribution
 setup
 NIL
@@ -896,9 +964,9 @@ NIL
 
 BUTTON
 235
-30
+50
 395
-63
+83
 Create District Maps
 redistrict
 T
@@ -913,9 +981,9 @@ NIL
 
 SLIDER
 30
-75
+100
 220
-108
+133
 num-voters
 num-voters
 50
@@ -928,14 +996,14 @@ HORIZONTAL
 
 SLIDER
 30
-120
+145
 220
-153
+178
 num-districts
 num-districts
 1
 10
-7.0
+8.0
 1
 1
 NIL
@@ -943,14 +1011,14 @@ HORIZONTAL
 
 SLIDER
 30
-165
+190
 220
-198
+223
 dem-percentage
 dem-percentage
 0
 100
-55.0
+54.0
 1
 1
 NIL
@@ -958,9 +1026,9 @@ HORIZONTAL
 
 PLOT
 235
-75
+100
 655
-290
+315
 Total Districts Received
 number of Democratic districts won
 frequency
@@ -977,9 +1045,9 @@ PENS
 
 MONITOR
 450
-300
+325
 655
-345
+370
 Number of Random District Maps
 length dem-wins-list
 17
@@ -1026,9 +1094,9 @@ Click this button to find the percent of district maps that have had a specific 
 
 SLIDER
 30
-255
+280
 220
-288
+313
 num-maps
 num-maps
 1
@@ -1041,14 +1109,14 @@ HORIZONTAL
 
 SLIDER
 30
-210
+235
 220
-243
+268
 num-cities
 num-cities
 0
 3
-1.0
+0.0
 1
 1
 NIL
@@ -1056,9 +1124,9 @@ HORIZONTAL
 
 SWITCH
 30
-305
+330
 220
-338
+363
 only-district-maps?
 only-district-maps?
 1
@@ -1071,7 +1139,7 @@ BUTTON
 657
 43
 Create Republican Gerrymander
-gerrymander
+gerrymanderRep
 T
 1
 T
@@ -1084,9 +1152,9 @@ NIL
 
 MONITOR
 235
-300
+325
 440
-345
+370
 Number of Gerrymandered Maps
 length gerrymander-results
 17
@@ -1095,11 +1163,11 @@ length gerrymander-results
 
 BUTTON
 405
-45
-612
-78
-Create Democractic Gerrmander
-NIL
+50
+660
+83
+Create Democractic Gerrymander
+gerrymanderDem
 T
 1
 T
@@ -1108,6 +1176,26 @@ NIL
 NIL
 NIL
 NIL
+1
+
+TEXTBOX
+45
+15
+195
+41
+Step1: Press Set Population Distribution!
+11
+0.0
+1
+
+TEXTBOX
+245
+15
+395
+41
+Step 2: Create a district map OR make gerrymandered maps
+11
+0.0
 1
 
 @#$#@#$#@
