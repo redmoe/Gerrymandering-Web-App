@@ -149,10 +149,11 @@ to gerrymanderRep
     set tries 0
   ]
   while [ num-packed < total-packed or any? patches with [packed? = true and full? = false]] [
-    create-packed-district  ;;make packed district first, then don't touch it
+    create-packed-district democrats ;;make packed district first, then don't touch it
     set tries 0
   ]
-  make-cracked-districts ;;builds districts by attempting to pack or crack
+
+  ask patches [make-cracked-districts democrats];;builds districts by attempting to pack or crack
   fill-holes
   find-clusters
   release-noncontiguous-portions
@@ -218,10 +219,10 @@ to gerrymanderDem
     set tries 0
   ]
   while [ num-packed < total-packed or any? patches with [packed? = true and full? = false]] [
-    create-packed-district  ;;make packed district first, then don't touch it
+    create-packed-district republicans;;make packed district first, then don't touch it
     set tries 0
   ]
-  make-cracked-districts ;;builds districts by attempting to pack or crack
+  ask turtles [make-cracked-districts republicans];;builds districts by attempting to pack or crack
   fill-holes
   find-clusters
   release-noncontiguous-portions
@@ -258,7 +259,12 @@ to gerrymanderDem
 end
 
 
-to create-packed-district
+to create-packed-district [party]
+  let antiparty republicans
+  let antiparty-here republicans-here
+  let party-here democrats-here
+  ifelse party = democrats [set party-here democrats-here set antiparty-here republicans-here] [set party-here republicans-here set antiparty-here democrats-here]
+  ifelse party = democrats [set antiparty republicans ] [set antiparty democrats]
   let d-num 1
   set num-packed 0
   while [d-num <= num-districts]
@@ -289,7 +295,7 @@ to create-packed-district
   while [d-num <= num-districts] [
     while [not all? patches with [district = d-num and packed? = true ] [full? = true and proportion-dem >= packed-proportion-threshold]] [ ;;continue growing until district is full and proportion of dems is too low
       ifelse any? patches with [district = d-num and packed? = true] [ ;;finds closest dem to packed district (seems like closest to random patch works better)
-        ask one-of patches with [district = d-num and packed? = true] [ salamander ]
+        ask one-of patches with [district = d-num and packed? = true] [ salamander party antiparty]
       ]
       [ ask one-of patches with [packed? = false and district > 0] [set packed? true] ]
       ask patches with [district = d-num and packed? = true] [
@@ -298,16 +304,24 @@ to create-packed-district
           set proportion-dem (dem-votes d-num) / (count turtles with [district = d-num])
         ]
         [ set proportion-dem 0 ]
-        if count turtles with [district = d-num] >= (1 + equal-population-error) * (count turtles) / num-districts  [ ;;if turtle count too far above quota, give up all republicans
-          ask n-of ((count republicans-on patches with [district = d-num and not any? democrats-here]) / 1) republicans-on patches with [district = d-num and not any? democrats-here] ;;remove half of district randomly to remove some voters (and try to absorb them into another district)
+        if count turtles with [district = d-num] >= (1 + equal-population-error) * (count turtles) / num-districts  [ ;;if turtle count too far above quota, give up all antiparty
+          ifelse antiparty = republicans [
+            ask n-of ((count republicans-on patches with [district = d-num and not any? democrats-here]) / 1) republicans-on patches with [district = d-num and not any? democrats-here] ;;remove half of district randomly to remove some voters (and try to absorb them into another district)
             [ undistrict ]
-          set full? false
+            set full? false
           ]
+          [
+            ask n-of ((count democrats-on patches with [district = d-num and not any? republicans-here]) / 1) democrats-on patches with [district = d-num and not any? republicans-here] ;;remove half of district randomly to remove some voters (and try to absorb them into another district)
+            [ undistrict ]
+            set full? false
+          ]
+
+        ]
         if count turtles with [district = d-num] >= (1 - equal-population-error) * (count turtles) / num-districts [ ;;if turtle count close to quota, set as full
           set full? true
         ]
         if proportion-dem < packed-proportion-threshold and any? patches with [full? = true] [
-          ask min-n-of ((count patches with [district = d-num]) / 2) patches with [district = d-num] [count democrats-here] ;;remove half of district randomly to remove some voters (and try to absorb them into another district)
+          ask min-n-of ((count patches with [district = d-num]) / 2) patches with [district = d-num] [count party-here] ;;remove half of district randomly to remove some voters (and try to absorb them into another district)
                 [ undistrict ]
           set full? false
     ]
@@ -332,24 +346,33 @@ to create-packed-district
   fill-in-enclaves
 end
 
-to salamander
-  if all? democrats [packed? = true] [stop]
-  let dem-to-grab nobody
+to salamander [party antiparty]
+  let antiparty-here republicans-here
+
+  if party = republicans [
+    set antiparty-here democrats-here
+
+  ]
+
+
+  if all? party [packed? = true] [stop]
+  let par-to-grab nobody
   let slither-dist 0
   ifelse random 100 < 5
-  [ set dem-to-grab one-of democrats with [packed? = false] ]
-  [ set dem-to-grab min-one-of democrats with [packed? = false and not any? republicans-here] [distance myself] ]
-  ifelse dem-to-grab = nobody
+  [ set par-to-grab one-of party with [packed? = false] ]
+  [ set par-to-grab min-one-of party with [packed? = false and not any? antiparty-here] [distance myself] ]
+  ifelse par-to-grab = nobody
   [ set slither-dist 0 ]
-  [ set slither-dist distance dem-to-grab + 1 ]
+  [ set slither-dist distance par-to-grab + 1 ]
   let slither 1
   while [slither < slither-dist] [
-    if (patch-at-heading-and-distance (towards dem-to-grab) (slither) != nobody)
-    and ([packed?] of patch-at-heading-and-distance (towards dem-to-grab) (slither) = false)
+    if (patch-at-heading-and-distance (towards par-to-grab) (slither) != nobody)
+    and ([packed?] of patch-at-heading-and-distance (towards par-to-grab) (slither) = false)
     [
-      if count republicans-on patch-at-heading-and-distance (towards dem-to-grab) (slither) <= count democrats-on patch-at-heading-and-distance (towards dem-to-grab) (slither)
-      [
-        ask patch-at-heading-and-distance (towards dem-to-grab) (slither) [
+      ifelse party = republicans [
+        if count democrats-on patch-at-heading-and-distance (towards par-to-grab) (slither) <= count republicans-on patch-at-heading-and-distance (towards par-to-grab) (slither)
+        [
+        ask patch-at-heading-and-distance (towards par-to-grab) (slither) [
           set pcolor [pcolor] of myself
           set district [district] of myself
           set cluster nobody
@@ -367,6 +390,31 @@ to salamander
             ]
           ]
         ]
+      ]
+
+      ]
+      [
+        if count republicans-on patch-at-heading-and-distance (towards par-to-grab) (slither) <= count democrats-on patch-at-heading-and-distance (towards par-to-grab) (slither)
+        [
+        ask patch-at-heading-and-distance (towards par-to-grab) (slither) [
+          set pcolor [pcolor] of myself
+          set district [district] of myself
+          set cluster nobody
+          set full? false
+          set border? false
+          set packed? true
+          if any? neighbors4 with [packed? = false] [
+          ask neighbors4 with [packed? = false] [
+              set pcolor [pcolor] of myself
+              set district [district] of myself
+              set cluster nobody
+              set full? false
+              set border? false
+              set packed? true
+            ]
+          ]
+        ]
+      ]
       ]
    ]
     set slither slither + 1
@@ -583,10 +631,12 @@ to make-districts ;;make districts by asking colored patches to absorb neighbors
     ]
   ]
 end
+to make-cracked-districts [party]
+  let party-here democrats-here
+  ifelse party = democrats [set party-here democrats-here] [set party-here republicans-here]
 
-to make-cracked-districts
-  set dems-packed count democrats with [packed? = true]
-  set dem-split (count democrats - dems-packed) / (num-districts - total-packed)
+  set dems-packed count party with [packed? = true]
+  set dem-split (count party - dems-packed) / (num-districts - total-packed)
   let voters 0
   ;;if not cracked yet, absorb neighbors indiscriminately
   ask patches with [ (district > 0) and (full? = false) and (packed? = false) ] [
@@ -602,8 +652,8 @@ to make-cracked-districts
         set packed? [packed?] of myself
         ]
       ]
-      if any? neighbors4 with [cracked? = true and not any? democrats-here] [
-        ask neighbors4 with [packed? = false and cracked? = true and not any? democrats-here] [ ;;only take gop from cracked districts
+      if any? neighbors4 with [cracked? = true and not any? party-here] [
+        ask neighbors4 with [packed? = false and cracked? = true and not any? party-here] [ ;;only take gop from cracked districts
         set pcolor [pcolor] of myself
         set district [district] of myself
         set packed? [packed?] of myself
@@ -614,8 +664,8 @@ to make-cracked-districts
   [
     ;;absorb empty or gop only if current district has fewer turtles than all neighbors (that aren't packed already)
     if all? neighbors4 with [district > 0 and packed? = false] [ count turtles with [ district = [district] of self ] >= voters ] [
-        if any? neighbors4 with [not any? democrats-here] [
-          ask neighbors4 with [packed? = false and not any? democrats-here] [
+        if any? neighbors4 with [not any? party-here] [
+          ask neighbors4 with [packed? = false and not any? party-here] [
             set pcolor [pcolor] of myself
             set district [district] of myself
             set packed? [packed?] of myself
@@ -628,21 +678,21 @@ to make-cracked-districts
   while [d-num <= num-districts] [
     if all? patches with [district = d-num] [packed? = false] [
       ;;check if dem count is within acceptable range
-      ifelse count democrats with [district = d-num] > 0.75 * dem-split and count democrats with [district = d-num] < 1.25 * dem-split
+      ifelse count party with [district = d-num] > 0.75 * dem-split and count party with [district = d-num] < 1.25 * dem-split
       [
         ask patches with [district = d-num] [set cracked? true] ;;can be designated as cracked, but not full yet
       ]
       [
-        ifelse count democrats with [district = d-num] >= 1.25 * dem-split
+        ifelse count party with [district = d-num] >= 1.25 * dem-split
         ;;if too high, get rid of all? dems
         [
-          ask max-n-of (count patches with [district = d-num] / 2) patches with [district = d-num] [count democrats-here]
+          ask max-n-of (count patches with [district = d-num] / 2) patches with [district = d-num] [count party-here]
           [ undistrict ] ;;cut patches with dems
         ]
         ;;if too low, get rid of empty or gops if district is full, otherwise just set it to false
         [
           if all? patches with [district = d-num ] [full? = true] [
-            ask min-n-of (count patches with [district = d-num] / 2) patches with [district = d-num] [count democrats-here]
+            ask min-n-of (count patches with [district = d-num] / 2) patches with [district = d-num] [count party-here]
             [ undistrict ] ;;cut patches, but try to keep dems
           ]
         ]
@@ -988,7 +1038,7 @@ num-voters
 num-voters
 50
 150
-100.0
+70.0
 10
 1
 NIL
@@ -1003,7 +1053,7 @@ num-districts
 num-districts
 1
 10
-8.0
+7.0
 1
 1
 NIL
@@ -1018,7 +1068,7 @@ dem-percentage
 dem-percentage
 0
 100
-54.0
+49.0
 1
 1
 NIL
@@ -1101,7 +1151,7 @@ num-maps
 num-maps
 1
 100
-1.0
+0.0
 1
 1
 NIL
