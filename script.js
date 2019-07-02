@@ -2,19 +2,23 @@ var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
 
 var grid=[];
-// var districts=[]
 var voters=[];
 
 var gridWidth=16;
 var gridHeight=16;
 var gridSize=30;
+
+// var voterImg = document.getElementById("voter");
+// voterImg.width=gridSize;
+// voterImg.height=gridSize;
+
 c.height=gridHeight*gridSize;
-c.width=gridWidth*gridSize
+c.width=gridWidth*gridSize;
 
 // var districtColors=["#FA8072","#228B22","#87CEEB","#FF00FF","#FF1493","	#2F4F4F","#FFDEAD"]
 
 var districtColors=["#000000","#DC143C","#FF4500","#FFFF00","#00FF00","#87CEFA","#FF00FF","#00FFFF"]
-var graphicBuffer=[]
+//var graphicBuffer=[]
 
 var numberOfVoters=100;
 var democratPercentage=.5;
@@ -22,9 +26,10 @@ var totalRepublicans=numberOfVoters*(1-democratPercentage);
 var totalDemocrats=numberOfVoters*democratPercentage;
 
 var districtCount=7;
-var districts=[gridWidth*gridHeight,0,0,0,0,0,0,0]
-var districtPositions=[[],[],[],[],[],[],[],[],[]]
-var polls=    [-1,0,0,0,0,0,0,0]
+var requiredVoters=districtCount/numberOfVoters;
+var districts=[]
+//var districtPositions=[[],[],[],[],[],[],[],[],[]]
+//var polls=[-1,0,0,0,0,0,0,0]
 
 var dirX=[1,-1,0,0];
 var dirY=[0,0,1,-1];
@@ -33,12 +38,19 @@ var republicanWins=0;
 var democratWins=0;
 
 function CreateVoters (number,party) {
-	for (var i=0;i<number;i++) {
+	for (var i=0;i<number+1;i++) {
 		var x=Math.random()*gridWidth;
 		var y=Math.random()*gridHeight;
+		var tile=grid[Math.floor(x)][Math.floor(y)]
 		// ctx.fillText(icon, x*gridSize, y*gridSize);
 		voters.push({x:x,y:y,party:party});
-		grid[Math.floor(x)][Math.floor(y)].votes+=party;
+		tile.votes+=party;
+		tile.voters+=1
+	}
+}
+function CreateDistrictPrimatives() {
+	for (var i=0;i<=districtCount;i++) {
+		districts.push({voters:0,tiles:[],poll:0,color:districtColors[i]})
 	}
 }
 
@@ -51,6 +63,7 @@ var worm={x:0,y:0,dx:1,dy:0,c:0};
 
 //runs the start of the program
 function setup() {
+	CreateDistrictPrimatives()
 	InitializeGrid()
 	CreateVoters(totalDemocrats,-1);
 	CreateVoters(totalRepublicans,1);
@@ -59,34 +72,40 @@ function setup() {
 	//FloodDistricts(districtCount);
 	//DistrictWinners();
 	seed_districts();
-
+	//draw()
 	update();
  //ColorPatches()	
 }
 var drawGame=true
 //runs every frame
 function update(timestamp){
-	if (districts[0]!=0) {
-	
+	if (districts[0].tiles.length!=0) {
 		diamond_fill();
-      console.log(districts[0])
-		 release_non_contiguous();
+      //  console.log(districts[0])
+		release_non_contiguous();
+		requestAnimationFrame(update);	
+		if (drawGame) {
+			drawGame=false;
+			setTimeout(draw,0)
+		}
 	}
-	if (drawGame) {
-		drawGame=false;
-		setTimeout(draw,0)
+	else {
+		DrawWinners();
+		for (var i=0; i<districtCount; i++) {
+			console.log(districts[i].poll);
+		}
+		return;
 	}
-	requestAnimationFrame(update);	
 }
 
 //runs at a set time
 function draw() {
 	var frame=grid;
-	if (graphicBuffer.length!=0) {
-		frame=graphicBuffer.shift();
-		DrawDistricts(frame);
+	//if (graphicBuffer.length!=0) {
+	//	frame=graphicBuffer.shift();
+		DrawDistricts(grid);
 	//	console.log("buffering");
-	}
+	//}
 		drawGame=true;
 	//}
 	//else {
@@ -94,29 +113,31 @@ function draw() {
 		//var txt = document.getElementById("win");
 		//txt.innerHTML="R "+republicanWins+" to D "+democratWins+". "+(democratWins>republicanWins ? "Democrats" : "Republicans")+" win!"
 	//}
-	DrawVoters(frame);
+	DrawVoters(grid);
 }
 
 function DrawDistricts(frame) {
 	for (var x=0; x<gridWidth; x++) {
 		for (var y=0; y<gridHeight; y++) {
-			if (frame[x][y].district!=0) {
-				ctx.fillStyle=districtColors[frame[x][y].district];
+			let tile=frame[x][y]
+			let tileDistrict=tile.district;
+			if (tileDistrict!=0) {
+				ctx.fillStyle=districts[tileDistrict].color;
 			}
 			else {
 				ctx.fillStyle=(x+y)%2==0 ? "#000000" : "#505050";
 			}
-			ctx.fillRect(x*gridSize,y*gridSize,50,50);
-      ctx.fillStyle="white"
+	        ctx.fillRect(x*gridSize,y*gridSize,50,50);
+            ctx.fillStyle="white"
       //"("+x+" "+y+") "+
-      ctx.fillText(frame[x][y].flag,x*gridSize,y*gridSize+gridSize)
+            ctx.fillText(tile.flag,x*gridSize,y*gridSize+gridSize)
 		}
 	}
 }
 
 function DrawVoters(frame) {
+	ctx.font = (gridSize/1.25)+"px Arial";
 	voters.forEach(function(v) {
-		ctx.font = (gridSize/1.25)+"px Arial";
 		var icon="?"
 		if (v.party>0) {
 			icon="R"
@@ -127,43 +148,81 @@ function DrawVoters(frame) {
 			ctx.fillStyle = "#0000FF";
 		}
 		ctx.fillText(icon, v.x*gridSize, v.y*gridSize);
+		//ctx.drawImage(voterImg,v.x*gridSize,v.y*gridSize)
 	});
 }
 
-function DistrictWinners() {
-	for (var x=0; x<gridWidth; x++) {
-		for (var y=0; y<gridHeight; y++) {
-			if (grid[x][y].district!=0) {
-				polls[grid[x][y].district]+=grid[x][y].votes;
-			}
-		}
+// function DistrictWinners() {
+// 	for (var x=0; x<gridWidth; x++) {
+// 		for (var y=0; y<gridHeight; y++) {
+// 			if (grid[x][y].district!=0) {
+// 				polls[grid[x][y].district]+=grid[x][y].votes;
+// 			}
+// 		}
+// 	}
+// 	for (var f=1; f<polls.length; f++) {
+// 		polls[f]=Math.round(polls[f]);
+// 		if (polls[f]>0) {
+// 			republicanWins++;
+// 		}
+// 		else {
+// 			democratWins++;
+// 		}
+// 	}
+// 	for (x=0; x<gridWidth; x++) {
+// 		for (y=0; y<gridHeight; y++) {
+// 			grid[x][y].winner=polls[grid[x][y].district];
+// 		}
+// 	}
+// }
+
+function GetDistrictCenter(district) {
+	let x=0;
+	let y=0;
+	for (var i=0; i<district.tiles.length;i++) {
+		x+=district.tiles[i].x;
+		y+=district.tiles[i].y;
+		console.log(x);
 	}
-	for (var f=1; f<polls.length; f++) {
-		polls[f]=Math.round(polls[f]);
-		if (polls[f]>0) {
+	x/=district.tiles.length;
+	y/=district.tiles.length;
+	console.log(x);
+	console.log(y);
+	return {x:x,y:y}
+}
+
+function DrawWinners() {
+	for (var i=1; i<=districtCount;i++) {
+		console.log(i);
+		if (districts[i].poll<0) {
 			republicanWins++;
 		}
 		else {
 			democratWins++;
 		}
 	}
-	for (x=0; x<gridWidth; x++) {
-		for (y=0; y<gridHeight; y++) {
-			grid[x][y].winner=polls[grid[x][y].district];
-		}
-	}
-}
-
-function DrawWinners() {
 	for (var x=0; x<gridWidth; x++) {
 		for (var y=0; y<gridHeight; y++) {
 			if (grid[x][y].district!=0) {
-				ctx.fillStyle= grid[x][y].winner>0 ? rgb(grid[x][y].district*32+20,0,0) : rgb(0,0,grid[x][y].district*32+20);
+				
+			//	ctx.fillStyle= grid[x][y].winner>0 ? rgb(grid[x][y].district*32+20,0,0) : rgb(0,0,grid[x][y].district*32+20);
+				ctx.fillStyle=districts[grid[x][y].district].poll>0 ? rgb(grid[x][y].district*32+20,0,0) : rgb(0,0,grid[x][y].district*32+20);
+
 				ctx.fillRect(x*gridSize,y*gridSize,50,50);
 			}
-
 		}
-	}	
+	}
+	ctx.font = (gridSize/2)+"px Arial";
+	ctx.fillStyle="#ffffff"	
+	for (var i=1;i<=districtCount;i++) {
+	    let pos = GetDistrictCenter(districts[i])
+	    let stats="District "+i+"\nVoters "+districts[i].voters+"\nPoll "+districts[i].poll
+		ctx.fillText(stats,pos.x*gridSize-ctx.measureText(stats).width/2,pos.y*gridSize);
+
+
+	}
+	var txt = document.getElementById("win");
+	txt.innerHTML="R "+republicanWins+" to D "+democratWins+". "+(democratWins>republicanWins ? "Democrats" : "Republicans")+" win!"		
 }
 
 //create a checkerboard two dimensional array grid 
@@ -173,7 +232,8 @@ function InitializeGrid() {
 		for (var y=0; y<gridHeight; y++) {
 			ctx.fillStyle=(x+y)%2==0 ? "#000000" : "#505050";
 			ctx.fillRect(x*gridSize,y*gridSize,50,50);
-			grid[x][y]={votes:0,district:0,winner:0,x:x,y:y,flag:0};
+			grid[x][y]={votes:0,district:0,winner:0,x:x,y:y,flag:0,voters:0};
+			districts[0].tiles.push(grid[x][y]);
 		//	districtPositions[0].push(grid[x][y])
 		}
 	}
@@ -265,35 +325,6 @@ function FloodDistricts(num_districts) {
   	}
 }
 
-// function FloodFill(posx,posy,target,replace,amount) {
-//   var pos=GetGridProperty(posx,posy,"district")
-//   if (pos == null || pos!=target || amount==0) return amount;
-//   grid[posx][posy].district=replace;
-//   amount--;
-//   GraphicStack();
-//   var order=[0,1,2,3];
-//  /// order=shuffle(order);
-//   for (var f=0; f<4;f++) {
-//     amount=FloodFill(posx+dirX[order[f]], posy+dirY[order[f]], target, replace,amount); 
-//     if (amount==0) return amount;
-//   }
-//   return amount  
-// }
-
-// function FloodFill(posx,posy,target,replace,Tproperty,Rproperty) {
-//   var pos=GetGridProperty(posx,posy,property)
-//   if (pos == null || pos!=target || amount==0) return amount;
-//   grid[posx][posy][property]=replace;
-//  // amount--;
-//  // GraphicStack();
-//   //var order=[0,1,2,3];
-//  /// order=shuffle(order);
-//   for (var f=0; f<4;f++) {
-//     amount=FloodFill(posx+dirX[order[f]], posy+dirY[order[f]], target, replace, property); 
-//     if (amount==0) return amount;
-//   }
-//   return amount  
-// }
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -312,11 +343,11 @@ function FillHoles(replace) {
     }
   }
 }
-function GraphicStack() {
-	// let frame=grid.slice(0);
-	let frame=JSON.parse(JSON.stringify(grid));
-	graphicBuffer.push(frame);
-}  
+// function GraphicStack() {
+// 	// let frame=grid.slice(0);
+// 	let frame=JSON.parse(JSON.stringify(grid));
+// 	graphicBuffer.push(frame);
+// }  
 function GetSig(x,y,type) {
   var sig=0
   for (var f=0; f<4; f++) {
@@ -345,14 +376,15 @@ function seed_districts() {
 			r=RandomGridPosition()
 			safetyBreak++
 		} while (grid[r.x][r.y].district!=0 && safetyBreak<10)
-		fill_self(r.x,r.y,d)
+		ChangeTileDistrict(r.x,r.y,d)
+		//console.log(d);
 	}	
 }
 
 
 function diamond_fill() {
-	let order=JSON.parse(JSON.stringify(districtPositions));
-	order.sort(function(a, b){
+	let districtsOrder=JSON.parse(JSON.stringify(districts));
+	districtsOrder.sort(function(a, b){
 		if (a.length==0) {
 			return 1
 		}
@@ -360,15 +392,31 @@ function diamond_fill() {
 			return -1
 		}
 		else {
-			return a.length-b.length
+			return a.voters-b.voters
 		}
-		// (a.length==0 ? return -1 : return a.length-b.length
-
 	})
-	//console.log(districtPositions);
-//	console.log(order);
-	//console.log(order[0])
-	// do
+//	console.log(districtsOrder)
+	let order=[]
+	for (var i=0; i<districtCount;i++) {
+		order.push(districtsOrder[i].tiles)
+		//console.log(districtsOrder[i].tiles);
+	}
+	//console.log(order);
+	//console.log(districtPositions)
+	//let order=JSON.parse(JSON.stringify(districtPositions));
+	// order.sort(function(a, b){
+	// 	if (a.length==0) {
+	// 		return 1
+	// 	}
+	// 	else if (b.length==0) {
+	// 		return -1
+	// 	}
+	// 	else {
+	// 		return a.length-b.length
+	// 	}
+	// 	// (a.length==0 ? return -1 : return a.length-b.length
+	// })
+
 	let chosen=order[0]
 	if (chosen[0].district==0) {
 		chosen=order[1];
@@ -376,61 +424,8 @@ function diamond_fill() {
 	//console.log(chosen[0].district);
 	 let r=Math.floor(Math.random()*chosen.length)
 	// // while GetSig(r)
-	 fill_neighbors(chosen[r].x,chosen[r].y,chosen[r].district)
-	// for (var d=1; d<districtCount-1;d++) {
-	// let borderDistricts=[];
-	// //borderDistricts[0]=[]
-	// for (d=1; d<districts.length; d++) {
-	// 	borderDistricts[d-1]={number:d-1,tiles:[]}
-	// }
-	// //console.log(borderDistricts)
-	// for (x=0; x<gridWidth; x++) {
-	// 	for (y=0; y<gridHeight; y++) {
-	// 		var dis=grid[x][y].district;
-	// 		//console.log(dis)
-	// 		if (dis!=0 && GetSig(x,y,dis)<4) {
-	// 			borderDistricts[dis-1].tiles.push({x:x,y:y})
-	// 		}
-	// 	}
-	// }
-	// do {
-	// 	borderDistricts=borderDistricts.sort(function(a,b){return a.tiles.length-b.tiles.length});
-	//  	r=borderDistricts[0].tiles[Math.floor(Math.random()*borderDistricts[0].tiles.length)]
-	//  	console.log(borderDistricts);
-	//  	if (r==null) return;
-	//  	fill_neighbors(r.x,r.y,0,borderDistricts[0].number+1);
-	//  	borderDistricts[0].tiles.splice(r,1);
-	//  	while (borderDistricts.length!=0 && borderDistricts[0].tiles.length==0) {
-	//  		borderDistricts.shift();
-	//  	}
-	// } while (borderDistricts.length!=0 && safetyBreak<100)
-	//console.log("ended");
-	//console.log(borderDistricts.sort(function(a, b){return a.length-b.length}))
-	//var sort=[1,2,3,4,5,6,7,8]
-	// sort=shuffle(sort);
-	//borderDistricts=shuffle(borderDistricts)
-	// var order=borderDistricts;
-	// do {
-	//  	order=order.sort(function(a, b){return a.length-b.length})
-	//  	if (order[0].length==0) {
-	// 		order.shift();
-	// 		console.log(order);
-	// 	}
-	// 	if (order[0].length!=0) {
-	// 		r=Math.floor(Math.random()*order[0].length)
-	// 		fill_neighbors(order[0][0].x,order[0][0].y,0,d);
-	// 		order[0].splice(r,1);
-	// 	}
-	//     if (order[0].length==0) {
-	// 		order.shift();
-	// 		console.log(order);
-	// 	}
-	// 	safetyBreak++;
-	// } while (order.length!=0 && safetyBreak<100)
-	// if (safetyBreak>100) {
-	// 	safetyBreak=0
-	// 	console.log("broke");
-	// }
+	 FillNeighbors(chosen[r].x,chosen[r].y,chosen[r].district)
+
 }
 
 var flagZones=[]
@@ -470,23 +465,20 @@ function release_non_contiguous() {
             //console.log("looped");
             var tile=f2.pop()
             //console.log("popped "+tile.x+" "+tile.y)
-              fill_self(tile.x,tile.y,0);
-            
+              ChangeTileDistrict(tile.x,tile.y,0);
           }
         }
         else {
           while (f1.length!=0) {
             var tile=f1.pop()
             //console.log("popped "+tile.x+" "+tile.y)
-            fill_self(tile.x,tile.y,0);
+            ChangeTileDistrict(tile.x,tile.y,0);
           }        
         }
       }   
   	}
     }
   }
- // console.log("end")
-	grid_stack();
 }
 function grow_contiguous_district(posx,posy,target,replace) {
   var pos=GetGridProperty(posx,posy)
@@ -498,41 +490,28 @@ function grow_contiguous_district(posx,posy,target,replace) {
   }
 }
 
-function grid_stack() {
-  // console.clear();
-  var message="";
-  for (var x=0; x<16; x++) {
-    message+="\n"
-    for (var y=0; y<16; y++) {
-      message+=grid[x][y].flag+" ";
-    }
-  }
- // console.log(message);
-}
-function fill_neighbors(x,y,target,replace) {
+
+function FillNeighbors(x,y,target,replace) {
 	var order=[0,1,2,3]
 	order=shuffle(order);
 
  	for (var f=0; f<4;f++) {
-    	fill_self(x+dirX[order[f]], y+dirY[order[f]], target, replace); 
+    	ChangeTileDistrict(x+dirX[order[f]], y+dirY[order[f]], target, replace); 
   	}
 }
-function fill_self(x,y,replace) {
-
+function ChangeTileDistrict(x,y,replace) {
 	var self=GetGridProperty(x,y)
-	//console.log(self);
-	//console.log("\n"+replace);
-
-	//console.log(self);
-
 	if (self==null || self.district==replace) return
-	districts[self.district]--;
-	districts[replace]++;
-	//console.log("Filled");
-	districtPositions[self.district].splice(districtPositions[self.district].indexOf(self),1);
-	districtPositions[replace].push(self)
+	var newDistrict=districts[replace];
+	var oldDistrict=districts[self.district];
+	oldDistrict.tiles.splice(oldDistrict.tiles.indexOf(self),1);
+	newDistrict.tiles.push(self);
+	oldDistrict.voters-=self.voters;
+	newDistrict.voters+=self.voters;
+	oldDistrict.poll-=self.votes;
+	newDistrict.poll+=self.votes;
+	//console.log(self.votes)
 	self.district=replace;
 
-	GraphicStack();
 }
 setup();
