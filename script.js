@@ -287,6 +287,7 @@ function ColorPatches() {
 function GetGridProperty(x,y,property) {
 	if (x<0 || x>=gridHeight || y<0 || y>=gridWidth) return null
 	else if (property) {
+		console.log(y);
 		return grid[x][y][property]
 	}
 	return grid[x][y]
@@ -351,7 +352,7 @@ function FillHoles(replace) {
 function GetSig(x,y,type) {
   var sig=0
   for (var f=0; f<4; f++) {
-    if (GetGridProperty(x+dirX[f],y+dirX[f],"district")==type) {
+    if (GetGridProperty(x+dirX[f],y+dirY[f],"district")==type) {
       sig++
     }
   }
@@ -401,31 +402,20 @@ function diamond_fill() {
 		order.push(districtsOrder[i].tiles)
 		//console.log(districtsOrder[i].tiles);
 	}
-	//console.log(order);
-	//console.log(districtPositions)
-	//let order=JSON.parse(JSON.stringify(districtPositions));
-	// order.sort(function(a, b){
-	// 	if (a.length==0) {
-	// 		return 1
-	// 	}
-	// 	else if (b.length==0) {
-	// 		return -1
-	// 	}
-	// 	else {
-	// 		return a.length-b.length
-	// 	}
-	// 	// (a.length==0 ? return -1 : return a.length-b.length
-	// })
 
 	let chosen=order[0]
 	if (chosen[0].district==0) {
 		chosen=order[1];
 	}
 	//console.log(chosen[0].district);
-	 let r=Math.floor(Math.random()*chosen.length)
-	// // while GetSig(r)
-	 FillNeighbors(chosen[r].x,chosen[r].y,chosen[r].district)
-
+	let r=Math.floor(Math.random()*chosen.length)
+	chosenTile=chosen[r]
+	while (GetSig(chosenTile.x,chosenTile.y,chosenTile.district)>=4) {
+		console.log("swapped");
+	 	r=Math.floor(Math.random()*chosen.length);
+	 	chosenTile=chosen[r]
+	}
+	FillNeighbors(chosenTile.x,chosenTile.y,chosenTile.district)
 }
 
 var flagZones=[]

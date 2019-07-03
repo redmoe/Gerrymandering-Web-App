@@ -82,3 +82,34 @@
 //   }
 //   return amount  
 // }
+
+// function grid_stack() {
+//   // console.clear();
+//   var message="";
+//   for (var x=0; x<16; x++) {
+//     message+="\n"
+//     for (var y=0; y<16; y++) {
+//       message+=grid[x][y].flag+" ";
+//     }
+//   }
+//  // console.log(message);
+// }
+//	districts[replace]++;
+	//console.log("Filled");
+	//districtPositions[self.district].splice(districtPositions[self.district].indexOf(self),1);
+	//districtPositions[replace].push(self)
+		//console.log(order);
+	//console.log(districtPositions)
+	//let order=JSON.parse(JSON.stringify(districtPositions));
+	// order.sort(function(a, b){
+	// 	if (a.length==0) {
+	// 		return 1
+	// 	}
+	// 	else if (b.length==0) {
+	// 		return -1
+	// 	}
+	// 	else {
+	// 		return a.length-b.length
+	// 	}
+	// 	// (a.length==0 ? return -1 : return a.length-b.length
+	// })
