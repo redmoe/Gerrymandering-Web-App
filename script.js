@@ -71,7 +71,9 @@ function setup() {
 	// worm.y=RandomGridPosition().y;
 	//FloodDistricts(districtCount);
 	//DistrictWinners();
-	seed_districts();
+	for (var d=1; d<districtCount+1;d++) {
+		SeedDistrict(d);
+	}	
 	//draw()
 	update();
  //ColorPatches()	
@@ -182,18 +184,18 @@ function GetDistrictCenter(district) {
 	for (var i=0; i<district.tiles.length;i++) {
 		x+=district.tiles[i].x;
 		y+=district.tiles[i].y;
-		console.log(x);
+	//	console.log(x);
 	}
 	x/=district.tiles.length;
 	y/=district.tiles.length;
-	console.log(x);
-	console.log(y);
+	//console.log(x);
+	//console.log(y);
 	return {x:x,y:y}
 }
 
 function DrawWinners() {
 	for (var i=1; i<=districtCount;i++) {
-		console.log(i);
+	//	console.log(i);
 		if (districts[i].poll<0) {
 			republicanWins++;
 		}
@@ -287,7 +289,7 @@ function ColorPatches() {
 function GetGridProperty(x,y,property) {
 	if (x<0 || x>=gridHeight || y<0 || y>=gridWidth) return null
 	else if (property) {
-		console.log(y);
+		//console.log(y);
 		return grid[x][y][property]
 	}
 	return grid[x][y]
@@ -370,16 +372,14 @@ function sleep(milliseconds) {
 function rgb(r, g, b){
   return "rgb("+r+","+g+","+b+")";
 }
-function seed_districts() {
-	for (var d=1; d<districtCount+1;d++) {
+function SeedDistrict(DistrictNumber) {
+	console.log("Seeding district "+DistrictNumber)
     let r=0
-		do {
-			r=RandomGridPosition()
-			safetyBreak++
-		} while (grid[r.x][r.y].district!=0 && safetyBreak<10)
-		ChangeTileDistrict(r.x,r.y,d)
-		//console.log(d);
-	}	
+	do {
+		r=RandomGridPosition()
+		safetyBreak++
+	} while (grid[r.x][r.y].district!=0 && safetyBreak<10)
+	ChangeTileDistrict(r.x,r.y,DistrictNumber)	
 }
 
 
@@ -411,7 +411,7 @@ function diamond_fill() {
 	let r=Math.floor(Math.random()*chosen.length)
 	chosenTile=chosen[r]
 	while (GetSig(chosenTile.x,chosenTile.y,chosenTile.district)>=4) {
-		console.log("swapped");
+		//console.log("swapped");
 	 	r=Math.floor(Math.random()*chosen.length);
 	 	chosenTile=chosen[r]
 	}
@@ -495,6 +495,9 @@ function ChangeTileDistrict(x,y,replace) {
 	var newDistrict=districts[replace];
 	var oldDistrict=districts[self.district];
 	oldDistrict.tiles.splice(oldDistrict.tiles.indexOf(self),1);
+	if (oldDistrict.tiles.length==0 && self.district!=0) {
+		SeedDistrict(self.district);
+	}
 	newDistrict.tiles.push(self);
 	oldDistrict.voters-=self.voters;
 	newDistrict.voters+=self.voters;
