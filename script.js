@@ -8,6 +8,8 @@ var gridWidth=16;
 var gridHeight=16;
 var gridSize=30;
 
+var chanceToPickNonEmpty=.9
+
 // var voterImg = document.getElementById("voter");
 // voterImg.width=gridSize;
 // voterImg.height=gridSize;
@@ -36,6 +38,7 @@ var dirY=[0,0,1,-1];
 
 var republicanWins=0;
 var democratWins=0;
+var startTime, endTime;
 
 function CreateVoters (number,party) {
 	for (var i=0;i<number+1;i++) {
@@ -67,6 +70,8 @@ function setup() {
 	InitializeGrid()
 	CreateVoters(totalDemocrats,-1);
 	CreateVoters(totalRepublicans,1);
+	startTime = new Date();
+
 	// worm.x=RandomGridPosition().x;
 	// worm.y=RandomGridPosition().y;
 	//FloodDistricts(districtCount);
@@ -96,6 +101,11 @@ function update(timestamp){
 		for (var i=0; i<districtCount; i++) {
 			console.log(districts[i].poll);
 		}
+		endTime = new Date();
+		var timeDiff = endTime - startTime; //in ms
+  		timeDiff /= 1000;
+		var seconds = Math.round(timeDiff);
+		console.log(seconds + " seconds");	
 		return;
 	}
 }
@@ -214,14 +224,23 @@ function DrawWinners() {
 			}
 		}
 	}
+	// ctx.font = (gridSize/2)+"px Arial";
+	// ctx.fillStyle="#ffffff"	
+	// for (var i=1;i<=districtCount;i++) {
+	//     let pos = GetDistrictCenter(districts[i])
+	//     let stats="District "+i+"\nVoters "+districts[i].voters+"\nPoll "+districts[i].poll
+	// 	ctx.fillText(stats,pos.x*gridSize-ctx.measureText(stats).width/2,pos.y*gridSize);
+	// }
 	ctx.font = (gridSize/2)+"px Arial";
 	ctx.fillStyle="#ffffff"	
 	for (var i=1;i<=districtCount;i++) {
+			console.log("winner")
+
 	    let pos = GetDistrictCenter(districts[i])
-	    let stats="District "+i+"\nVoters "+districts[i].voters+"\nPoll "+districts[i].poll
-		ctx.fillText(stats,pos.x*gridSize-ctx.measureText(stats).width/2,pos.y*gridSize);
-
-
+	    let stats=["DISTRICT "+i,"\nVoters "+districts[i].voters,"\nPoll "+districts[i].poll]
+		for (var f=0;f<stats.length;f++) {
+			ctx.fillText(stats[f],pos.x*gridSize-ctx.measureText(stats[f]).width/2,pos.y*gridSize+f*(gridSize/2));
+		}
 	}
 	var txt = document.getElementById("win");
 	txt.innerHTML="R "+republicanWins+" to D "+democratWins+". "+(democratWins>republicanWins ? "Democrats" : "Republicans")+" win!"		
@@ -346,11 +365,7 @@ function FillHoles(replace) {
     }
   }
 }
-// function GraphicStack() {
-// 	// let frame=grid.slice(0);
-// 	let frame=JSON.parse(JSON.stringify(grid));
-// 	graphicBuffer.push(frame);
-// }  
+
 function GetSig(x,y,type) {
   var sig=0
   for (var f=0; f<4; f++) {
@@ -396,25 +411,46 @@ function diamond_fill() {
 			return a.voters-b.voters
 		}
 	})
-//	console.log(districtsOrder)
 	let order=[]
 	for (var i=0; i<districtCount;i++) {
 		order.push(districtsOrder[i].tiles)
-		//console.log(districtsOrder[i].tiles);
 	}
+	//choose the district with the least voters and then filter any tiles with all neighbors filled
 
 	let chosen=order[0]
+	//probally unnessarcy now remove later
 	if (chosen[0].district==0) {
 		chosen=order[1];
+	}	
+	chosen=chosen.filter(function(value){
+		return GetSig(value.x,value.y,value.district)<4
+	})
+	console.log(chosen);
+	//then filter to see if any tiles neighbor empty districts
+	let emptyNeighbors=chosen.filter(function(value){
+		console.log(value)
+		return GetSig(value.x,value.y,0)>0
+	})
+	let r=0
+	let chosenTile
+
+	if (emptyNeighbors.length!=0 && Math.random()<chanceToPickNonEmpty) {
+		//r=Math.floor(Math.random()*emptyNeighbors.length)
+		console.log("picked empty")
+		chosenTile=emptyNeighbors[r]
+
 	}
-	//console.log(chosen[0].district);
-	let r=Math.floor(Math.random()*chosen.length)
-	chosenTile=chosen[r]
-	while (GetSig(chosenTile.x,chosenTile.y,chosenTile.district)>=4) {
-		//console.log("swapped");
-	 	r=Math.floor(Math.random()*chosen.length);
-	 	chosenTile=chosen[r]
+	else {
+		r=Math.floor(Math.random()*chosen.length)
+		chosenTile=chosen[r]
+
 	}
+	console.log(r)
+
+	// while (GetSig(chosenTile.x,chosenTile.y,chosenTile.district)>=4) {
+	//  	r=Math.floor(Math.random()*chosen.length);
+	//  	chosenTile=chosen[r]
+	// }
 	FillNeighbors(chosenTile.x,chosenTile.y,chosenTile.district)
 }
 
