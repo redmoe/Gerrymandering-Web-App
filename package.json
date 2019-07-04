@@ -1,0 +1,6 @@
+{
+  "name": "Gerrymandering Web app.", // The name of your project
+  "version": "0.0.1", // The version of your project
+  "description": "Gerrymandering Web app.", // The description of your project
+  "main": "index.html"
+}

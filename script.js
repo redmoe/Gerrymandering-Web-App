@@ -40,6 +40,8 @@ var republicanWins=0;
 var democratWins=0;
 var startTime, endTime;
 
+var flagZones=[]
+
 function CreateVoters (number,party) {
 	for (var i=0;i<number+1;i++) {
 		var x=Math.random()*gridWidth;
@@ -89,7 +91,7 @@ function update(timestamp){
 	if (districts[0].tiles.length!=0) {
 		diamond_fill();
       //  console.log(districts[0])
-		release_non_contiguous();
+		ReleaseNonContiguous();
 		requestAnimationFrame(update);	
 		if (drawGame) {
 			drawGame=false;
@@ -101,11 +103,6 @@ function update(timestamp){
 		for (var i=0; i<districtCount; i++) {
 			console.log(districts[i].poll);
 		}
-		endTime = new Date();
-		var timeDiff = endTime - startTime; //in ms
-  		timeDiff /= 1000;
-		var seconds = Math.round(timeDiff);
-		console.log(seconds + " seconds");	
 		return;
 	}
 }
@@ -128,6 +125,14 @@ function draw() {
 	DrawVoters(grid);
 }
 
+function EndStats() {
+		endTime = new Date();
+		var timeDiff = endTime - startTime; //in ms
+  		timeDiff /= 1000;
+		var seconds = Math.round(timeDiff);
+		console.log(seconds + " seconds");	
+}
+
 function DrawDistricts(frame) {
 	for (var x=0; x<gridWidth; x++) {
 		for (var y=0; y<gridHeight; y++) {
@@ -142,7 +147,7 @@ function DrawDistricts(frame) {
 	        ctx.fillRect(x*gridSize,y*gridSize,50,50);
             ctx.fillStyle="white"
       //"("+x+" "+y+") "+
-            ctx.fillText(tile.flag,x*gridSize,y*gridSize+gridSize)
+        //    ctx.fillText(tile.flag,x*gridSize,y*gridSize+gridSize)
 		}
 	}
 }
@@ -194,18 +199,14 @@ function GetDistrictCenter(district) {
 	for (var i=0; i<district.tiles.length;i++) {
 		x+=district.tiles[i].x;
 		y+=district.tiles[i].y;
-	//	console.log(x);
 	}
 	x/=district.tiles.length;
 	y/=district.tiles.length;
-	//console.log(x);
-	//console.log(y);
 	return {x:x,y:y}
 }
 
 function DrawWinners() {
 	for (var i=1; i<=districtCount;i++) {
-	//	console.log(i);
 		if (districts[i].poll<0) {
 			republicanWins++;
 		}
@@ -216,26 +217,14 @@ function DrawWinners() {
 	for (var x=0; x<gridWidth; x++) {
 		for (var y=0; y<gridHeight; y++) {
 			if (grid[x][y].district!=0) {
-				
-			//	ctx.fillStyle= grid[x][y].winner>0 ? rgb(grid[x][y].district*32+20,0,0) : rgb(0,0,grid[x][y].district*32+20);
 				ctx.fillStyle=districts[grid[x][y].district].poll>0 ? rgb(grid[x][y].district*32+20,0,0) : rgb(0,0,grid[x][y].district*32+20);
-
 				ctx.fillRect(x*gridSize,y*gridSize,50,50);
 			}
 		}
 	}
-	// ctx.font = (gridSize/2)+"px Arial";
-	// ctx.fillStyle="#ffffff"	
-	// for (var i=1;i<=districtCount;i++) {
-	//     let pos = GetDistrictCenter(districts[i])
-	//     let stats="District "+i+"\nVoters "+districts[i].voters+"\nPoll "+districts[i].poll
-	// 	ctx.fillText(stats,pos.x*gridSize-ctx.measureText(stats).width/2,pos.y*gridSize);
-	// }
 	ctx.font = (gridSize/2)+"px Arial";
 	ctx.fillStyle="#ffffff"	
 	for (var i=1;i<=districtCount;i++) {
-			console.log("winner")
-
 	    let pos = GetDistrictCenter(districts[i])
 	    let stats=["DISTRICT "+i,"\nVoters "+districts[i].voters,"\nPoll "+districts[i].poll]
 		for (var f=0;f<stats.length;f++) {
@@ -255,7 +244,6 @@ function InitializeGrid() {
 			ctx.fillRect(x*gridSize,y*gridSize,50,50);
 			grid[x][y]={votes:0,district:0,winner:0,x:x,y:y,flag:0,voters:0};
 			districts[0].tiles.push(grid[x][y]);
-		//	districtPositions[0].push(grid[x][y])
 		}
 	}
 }
@@ -308,7 +296,6 @@ function ColorPatches() {
 function GetGridProperty(x,y,property) {
 	if (x<0 || x>=gridHeight || y<0 || y>=gridWidth) return null
 	else if (property) {
-		//console.log(y);
 		return grid[x][y][property]
 	}
 	return grid[x][y]
@@ -343,7 +330,6 @@ function FloodDistricts(num_districts) {
     	} while (grid[r.x][r.y].district!=0 && safetyBreak<1000)
     	safetyBreak=0;
     	FloodFill(rx,ry,0,d,50)
-    	// FillHoles(d);       
   	}
 }
 
@@ -435,8 +421,7 @@ function diamond_fill() {
 	let chosenTile
 
 	if (emptyNeighbors.length!=0 && Math.random()<chanceToPickNonEmpty) {
-		//r=Math.floor(Math.random()*emptyNeighbors.length)
-		console.log("picked empty")
+		r=Math.floor(Math.random()*emptyNeighbors.length)
 		chosenTile=emptyNeighbors[r]
 
 	}
@@ -445,20 +430,13 @@ function diamond_fill() {
 		chosenTile=chosen[r]
 
 	}
-	console.log(r)
-
-	// while (GetSig(chosenTile.x,chosenTile.y,chosenTile.district)>=4) {
-	//  	r=Math.floor(Math.random()*chosen.length);
-	//  	chosenTile=chosen[r]
-	// }
 	FillNeighbors(chosenTile.x,chosenTile.y,chosenTile.district)
 }
 
-var flagZones=[]
-function release_non_contiguous() {
+
+function ReleaseNonContiguous() {
 	let curf=1
     flagZones=[]
-//  var flagTypes=[]
 	for (var x=0; x<gridWidth; x++) {
 		for (var y=0; y<gridHeight; y++) {
 			grid[x][y].flag=0
@@ -469,42 +447,34 @@ function release_non_contiguous() {
 			for (var y=0; y<gridHeight; y++) {
 				if (grid[x][y].district!=0 && grid[x][y].flag==0) {
           			flagZones[curf]=[]
-         		// flagTypes[curf]=gridDistrict
 					grow_contiguous_district(x,y,grid[x][y].district,curf)
 					curf+=1
 				}
 			}
 		}
 	}
- //console.log(flagZones)
-  for (var f=1; f<flagZones.length;f++) {
-  	for (var l=f+1; l<flagZones.length; l++) {
-    let f1=flagZones[f]
-    let f2=flagZones[l]
-    //console.log(f+" "+l)
-   // console.log(flagZones.length)
-    //console.log(f2)
-    if (f1[0] && f2[0]) {
-     if (f1[0].district==f2[0].district) {
-        if (f1.length>f2.length) {
-          while (f2.length!=0) {
-            //console.log("looped");
-            var tile=f2.pop()
-            //console.log("popped "+tile.x+" "+tile.y)
-              ChangeTileDistrict(tile.x,tile.y,0);
-          }
-        }
-        else {
-          while (f1.length!=0) {
-            var tile=f1.pop()
-            //console.log("popped "+tile.x+" "+tile.y)
-            ChangeTileDistrict(tile.x,tile.y,0);
-          }        
-        }
-      }   
+  	for (var f=1; f<flagZones.length;f++) {
+  		for (var l=f+1; l<flagZones.length; l++) {
+    		let f1=flagZones[f]
+    		let f2=flagZones[l]
+    		if (f1[0] && f2[0]) {
+     			if (f1[0].district==f2[0].district) {
+        			if (f1.length>f2.length) {
+          				while (f2.length!=0) {
+            				var tile=f2.pop()
+              				ChangeTileDistrict(tile.x,tile.y,0);
+          				}
+        			}
+        			else {
+         				while (f1.length!=0) {
+            				var tile=f1.pop()
+            				ChangeTileDistrict(tile.x,tile.y,0);
+          				}        
+        			}
+      			}   
+  			}
+    	}
   	}
-    }
-  }
 }
 function grow_contiguous_district(posx,posy,target,replace) {
   var pos=GetGridProperty(posx,posy)
