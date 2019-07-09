@@ -2,16 +2,31 @@
 <html>
 <head>
 	<title>Gerrymandering Web App Prototype</title>
+	<style type="text/css">
+	canvas {
+		border:1px solid;
+    	display: inline-block;
+	}
+	</style>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 </head>
 <body>
-	
+	<!-- <img id="voter" src="voter.png"> -->
+		<canvas id="myCanvas" width="800px" height="800px">
+		Your browser does not support the HTML5 canvas tag.</canvas>
+		<h1 id="win">Winner was:</h1>
 
-	<canvas id="myCanvas" width="800" height="800" style="border:1px solid #d3d3d3;">
-Your browser does not support the HTML5 canvas tag.</canvas>
-	<h1 id="win">Winner was:</h1>
+		<canvas id="myChart" width="640" height="480"></canvas>
+
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+
 <!-- 	//<script src="Agent.js"></script> -->
 <!-- 	<script src="Model.js"></script> -->
 	
 	<script src="script.js"></script>
+
+	<script src="chart.js"></script>
+
 </body>
 </html>

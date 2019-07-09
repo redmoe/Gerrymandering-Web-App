@@ -21,7 +21,8 @@ c.width=gridWidth*gridSize;
 
 var districtColors=["#000000","#DC143C","#FF4500","#FFFF00","#00FF00","#87CEFA","#FF00FF","#00FFFF"]
 //var graphicBuffer=[]
-
+var repColor="#FF0000";
+var demColor="#0000FF";
 var numberOfVoters=100;
 var democratPercentage=.5;
 var totalRepublicans=numberOfVoters*(1-democratPercentage);
@@ -41,7 +42,9 @@ var democratWins=0;
 var startTime, endTime;
 
 var flagZones=[]
-
+//console.log(chart.data.datasets[0].data[1])
+//chart.data.datasets[0].data[1]=100
+//chart.update()
 function CreateVoters (number,party) {
 	for (var i=0;i<number+1;i++) {
 		var x=Math.random()*gridWidth;
@@ -54,6 +57,7 @@ function CreateVoters (number,party) {
 	}
 }
 function CreateDistrictPrimatives() {
+	districts=[];	
 	for (var i=0;i<=districtCount;i++) {
 		districts.push({voters:0,tiles:[],poll:0,color:districtColors[i]})
 	}
@@ -67,70 +71,76 @@ var worm={x:0,y:0,dx:1,dy:0,c:0};
 
 
 //runs the start of the program
-function setup() {
+window.onload=function setup() {
+	InitChart()
+	//draw()
+	NewMap();
+	update();
+ //ColorPatches()	
+}
+function ResetDistricts() {
+	gameOverRun=false;
+	CreateDistrictPrimatives()
+	for (var d=1; d<districtCount+1;d++) {
+		SeedDistrict(d);
+	}	
+}
+function NewMap() {
+	districts=[];
+	voters=[];
+	gameOverRun=false;
 	CreateDistrictPrimatives()
 	InitializeGrid()
 	CreateVoters(totalDemocrats,-1);
 	CreateVoters(totalRepublicans,1);
 	startTime = new Date();
-
-	// worm.x=RandomGridPosition().x;
-	// worm.y=RandomGridPosition().y;
-	//FloodDistricts(districtCount);
-	//DistrictWinners();
 	for (var d=1; d<districtCount+1;d++) {
 		SeedDistrict(d);
 	}	
-	//draw()
-	update();
- //ColorPatches()	
 }
+
+$(document).on("keypress", function (e) {
+	ResetDistricts();
+});
+
 var drawGame=true
+var gameOverRun=false;
 //runs every frame
 function update(timestamp){
+	console.log("running")
 	if (districts[0].tiles.length!=0) {
 		diamond_fill();
-      //  console.log(districts[0])
 		ReleaseNonContiguous();
-		requestAnimationFrame(update);	
 		if (drawGame) {
 			drawGame=false;
 			setTimeout(draw,0)
 		}
 	}
-	else {
+	else if (!gameOverRun) {
 		DrawWinners();
+		gameOverRun=true;
 		for (var i=0; i<districtCount; i++) {
 			console.log(districts[i].poll);
 		}
-		return;
 	}
+	requestAnimationFrame(update);	
+
 }
 
 //runs at a set time
 function draw() {
 	var frame=grid;
-	//if (graphicBuffer.length!=0) {
-	//	frame=graphicBuffer.shift();
-		DrawDistricts(grid);
-	//	console.log("buffering");
-	//}
-		drawGame=true;
-	//}
-	//else {
-		//DrawWinners();
-		//var txt = document.getElementById("win");
-		//txt.innerHTML="R "+republicanWins+" to D "+democratWins+". "+(democratWins>republicanWins ? "Democrats" : "Republicans")+" win!"
-	//}
+	DrawDistricts(grid);
+	drawGame=true;
 	DrawVoters(grid);
 }
 
 function EndStats() {
-		endTime = new Date();
-		var timeDiff = endTime - startTime; //in ms
-  		timeDiff /= 1000;
-		var seconds = Math.round(timeDiff);
-		console.log(seconds + " seconds");	
+	endTime = new Date();
+	var timeDiff = endTime - startTime; //in ms
+  	timeDiff /= 1000;
+	var seconds = Math.round(timeDiff);
+	console.log(seconds + " seconds");	
 }
 
 function DrawDistricts(frame) {
@@ -146,8 +156,6 @@ function DrawDistricts(frame) {
 			}
 	        ctx.fillRect(x*gridSize,y*gridSize,50,50);
             ctx.fillStyle="white"
-      //"("+x+" "+y+") "+
-        //    ctx.fillText(tile.flag,x*gridSize,y*gridSize+gridSize)
 		}
 	}
 }
@@ -158,40 +166,16 @@ function DrawVoters(frame) {
 		var icon="?"
 		if (v.party>0) {
 			icon="R"
-			ctx.fillStyle = "#FF0000";
+			ctx.fillStyle = repColor;
 		}
 		else {
 			icon="D"
-			ctx.fillStyle = "#0000FF";
+			ctx.fillStyle = demColor;
 		}
 		ctx.fillText(icon, v.x*gridSize, v.y*gridSize);
 		//ctx.drawImage(voterImg,v.x*gridSize,v.y*gridSize)
 	});
 }
-
-// function DistrictWinners() {
-// 	for (var x=0; x<gridWidth; x++) {
-// 		for (var y=0; y<gridHeight; y++) {
-// 			if (grid[x][y].district!=0) {
-// 				polls[grid[x][y].district]+=grid[x][y].votes;
-// 			}
-// 		}
-// 	}
-// 	for (var f=1; f<polls.length; f++) {
-// 		polls[f]=Math.round(polls[f]);
-// 		if (polls[f]>0) {
-// 			republicanWins++;
-// 		}
-// 		else {
-// 			democratWins++;
-// 		}
-// 	}
-// 	for (x=0; x<gridWidth; x++) {
-// 		for (y=0; y<gridHeight; y++) {
-// 			grid[x][y].winner=polls[grid[x][y].district];
-// 		}
-// 	}
-// }
 
 function GetDistrictCenter(district) {
 	let x=0;
@@ -232,11 +216,17 @@ function DrawWinners() {
 		}
 	}
 	var txt = document.getElementById("win");
+	//addData(chart,"Run",)
+	chart.data.datasets[0].data.push(-republicanWins)	
+	chart.data.datasets[1].data.push(democratWins)
+	chart.update()
 	txt.innerHTML="R "+republicanWins+" to D "+democratWins+". "+(democratWins>republicanWins ? "Democrats" : "Republicans")+" win!"		
 }
 
 //create a checkerboard two dimensional array grid 
 function InitializeGrid() {
+	grid=[];
+	
 	for (var x=0; x<gridWidth; x++) {
 		grid[x]=[]
 		for (var y=0; y<gridHeight; y++) {
@@ -287,7 +277,7 @@ function ColorPatches() {
 	for (var x=0; x<gridWidth; x++) {
 		for (var y=0; y<gridHeight; y++) {
 			//if no one then black else republican red else blue
-			ctx.fillStyle=grid[x][y]==0 ? "#000000" : grid[x][y] < 0 ? "#FF0000" : "#0000FF";
+			ctx.fillStyle=grid[x][y]==0 ? "#000000" : grid[x][y] < 0 ? repColor : demColor;
 			ctx.fillRect(x*gridSize,y*gridSize,50,50);
 		}
 	}
@@ -361,6 +351,7 @@ function GetSig(x,y,type) {
   }
   return sig
 }
+
 function sleep(milliseconds) {
   var start = new Date().getTime();
   for (var i = 0; i < 1e7; i++) {
@@ -382,7 +373,6 @@ function SeedDistrict(DistrictNumber) {
 	} while (grid[r.x][r.y].district!=0 && safetyBreak<10)
 	ChangeTileDistrict(r.x,r.y,DistrictNumber)	
 }
-
 
 function diamond_fill() {
 	let districtsOrder=JSON.parse(JSON.stringify(districts));
@@ -411,10 +401,8 @@ function diamond_fill() {
 	chosen=chosen.filter(function(value){
 		return GetSig(value.x,value.y,value.district)<4
 	})
-	console.log(chosen);
 	//then filter to see if any tiles neighbor empty districts
 	let emptyNeighbors=chosen.filter(function(value){
-		console.log(value)
 		return GetSig(value.x,value.y,0)>0
 	})
 	let r=0
@@ -432,7 +420,6 @@ function diamond_fill() {
 	}
 	FillNeighbors(chosenTile.x,chosenTile.y,chosenTile.district)
 }
-
 
 function ReleaseNonContiguous() {
 	let curf=1
@@ -486,7 +473,6 @@ function grow_contiguous_district(posx,posy,target,replace) {
   }
 }
 
-
 function FillNeighbors(x,y,target,replace) {
 	var order=[0,1,2,3]
 	order=shuffle(order);
@@ -495,6 +481,7 @@ function FillNeighbors(x,y,target,replace) {
     	ChangeTileDistrict(x+dirX[order[f]], y+dirY[order[f]], target, replace); 
   	}
 }
+
 function ChangeTileDistrict(x,y,replace) {
 	var self=GetGridProperty(x,y)
 	if (self==null || self.district==replace) return
@@ -509,8 +496,6 @@ function ChangeTileDistrict(x,y,replace) {
 	newDistrict.voters+=self.voters;
 	oldDistrict.poll-=self.votes;
 	newDistrict.poll+=self.votes;
-	//console.log(self.votes)
 	self.district=replace;
-
 }
-setup();
+//setup();

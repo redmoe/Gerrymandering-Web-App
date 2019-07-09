@@ -1,6 +1,23 @@
 {
-  "name": "Gerrymandering Web app.", // The name of your project
-  "version": "0.0.1", // The version of your project
-  "description": "Gerrymandering Web app.", // The description of your project
-  "main": "index.html"
+  "name": "gerrymandering-web-app",
+  "version": "0.0.1",
+  "description": "Web app for gerrymandering",
+  "main": "index.html",
+  "scripts": {
+    "test": "testing"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redmoe/Gerrymandering-Web-App.git"
+  },
+  "author": "Munro Hoberman and Anne Yust",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/redmoe/Gerrymandering-Web-App/issues"
+  },
+  "homepage": "https://github.com/redmoe/Gerrymandering-Web-App#readme",
+  "dependencies": {
+    "chart.js": "^2.8.0",
+    "jquery": "^3.4.1"
+  }
 }
