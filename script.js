@@ -1,3 +1,5 @@
+
+
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
 
@@ -10,7 +12,11 @@ var gridSize=30;
 
 var chanceToPickNonEmpty=.9
 
-// var voterImg = document.getElementById("voter");
+
+var voterImg = document.getElementById("voter");
+var repImg = document.getElementById("repImg");
+var demImg = document.getElementById("demImg");
+
 // voterImg.width=gridSize;
 // voterImg.height=gridSize;
 
@@ -18,8 +24,18 @@ c.height=gridHeight*gridSize;
 c.width=gridWidth*gridSize;
 
 // var districtColors=["#FA8072","#228B22","#87CEEB","#FF00FF","#FF1493","	#2F4F4F","#FFDEAD"]
+  var scheme = new ColorScheme;
+  scheme.from_hue(Math.random()*255)         
+        .scheme('triade')   
+   .variation('pastel')
 
-var districtColors=["#000000","#DC143C","#FF4500","#FFFF00","#00FF00","#87CEFA","#FF00FF","#00FFFF"]
+
+  // var colors = scheme.colors();
+
+
+var districtColors=scheme.colors()
+console.log(districtColors);
+// var districtColors=["#000000","#DC143C","#FF4500","#FFFF00","#00FF00","#87CEFA","#FF00FF","#00FFFF"]
 //var graphicBuffer=[]
 var repColor="#FF0000";
 var demColor="#0000FF";
@@ -37,8 +53,6 @@ var districts=[]
 var dirX=[1,-1,0,0];
 var dirY=[0,0,1,-1];
 
-var republicanWins=0;
-var democratWins=0;
 var startTime, endTime;
 
 var flagZones=[]
@@ -108,6 +122,13 @@ $(document).on("keypress", function (e) {
 	ResetDistricts();
 });
 
+$( "#ResetMap" ).click(function() {
+	ResetDistricts();
+});
+
+$( "#NewMap" ).click(function() {
+	NewMap();
+});
 var drawGame=true
 var gameOverRun=false;
 //runs every frame
@@ -157,7 +178,7 @@ function DrawDistricts(frame) {
 			let tile=frame[x][y]
 			let tileDistrict=tile.district;
 			if (tileDistrict!=0) {
-				ctx.fillStyle=districts[tileDistrict].color;
+				ctx.fillStyle="#"+districts[tileDistrict].color;
 			}
 			else {
 				ctx.fillStyle=(x+y)%2==0 ? "#000000" : "#505050";
@@ -175,13 +196,16 @@ function DrawVoters(frame) {
 		if (v.party>0) {
 			icon="R"
 			ctx.fillStyle = repColor;
+			ctx.drawImage(repImg,v.x*gridSize,v.y*gridSize,gridSize,gridSize)
+
 		}
 		else {
 			icon="D"
 			ctx.fillStyle = demColor;
+			ctx.drawImage(demImg,v.x*gridSize,v.y*gridSize,gridSize,gridSize)
+
 		}
-		ctx.fillText(icon, v.x*gridSize, v.y*gridSize);
-		//ctx.drawImage(voterImg,v.x*gridSize,v.y*gridSize)
+		// ctx.fillText(icon, v.x*gridSize, v.y*gridSize+(gridSize/1.25));
 	});
 }
 
@@ -198,6 +222,8 @@ function GetDistrictCenter(district) {
 }
 
 function DrawWinners() {
+	var republicanWins=0;
+	var democratWins=0;
 	for (var i=1; i<=districtCount;i++) {
 		if (districts[i].poll<0) {
 			republicanWins++;

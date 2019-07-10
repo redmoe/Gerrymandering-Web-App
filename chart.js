@@ -31,7 +31,7 @@
 var color = Chart.helpers.color;
 var chart;
 var barChartData = {
-            labels: ["monday","tuesday"],
+            labels: ["4-3","5-2","6-1","7-0"],
             datasets: [{
                 label: 'Republican Wins',
                 backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),

@@ -7,18 +7,40 @@
 		border:1px solid;
     	display: inline-block;
 	}
+	button {
+    	display: inline-block;
+		width: 100px;		
+	}
+	.chart-container {
+    	width: 900px;
+    	height:200px
+	}
 	</style>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script src="color-scheme.js"></script>
+
 </head>
 <body>
-	<!-- <img id="voter" src="voter.png"> -->
+<!-- 	<img id="voter" src="voter.png" width="10px" height="10px">
+ -->	<img id="demImg" src="demVoter.png" width="10px" height="10px">
+	<img id="repImg" src="repVoter.png" width="10px" height="10px">
+
+	<div>
+
 		<canvas id="myCanvas" width="800px" height="800px">
 		Your browser does not support the HTML5 canvas tag.</canvas>
-		<h1 id="win">Winner was:</h1>
+		<button id="NewMap">New Map</button>
+		<button id="ResetMap">New Districts</button>	
+	</div>
 
-		<canvas id="myChart" width="640" height="480"></canvas>
 
-	<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+	
+	<h1 id="win">Winner was:</h1>
+	<div class="chart-container">
+	    <canvas id="myChart"></canvas>
+
+	</div>
 
 
 <!-- 	//<script src="Agent.js"></script> -->
