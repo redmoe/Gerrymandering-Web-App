@@ -81,12 +81,17 @@ window.onload=function setup() {
 function ResetDistricts() {
 	gameOverRun=false;
 	CreateDistrictPrimatives()
-	for (var d=1; d<districtCount+1;d++) {
+	for (var x=0; x<gridWidth; x++) {
+		for (var y=0; y<gridHeight; y++) {
+			grid[x][y].district=0;
+			districts[0].tiles.push(grid[x][y]);
+		}
+	}	
+	for (var d=1; d<=districtCount;d++) {
 		SeedDistrict(d);
 	}	
 }
 function NewMap() {
-	districts=[];
 	voters=[];
 	gameOverRun=false;
 	CreateDistrictPrimatives()
@@ -94,7 +99,7 @@ function NewMap() {
 	CreateVoters(totalDemocrats,-1);
 	CreateVoters(totalRepublicans,1);
 	startTime = new Date();
-	for (var d=1; d<districtCount+1;d++) {
+	for (var d=1; d<=districtCount;d++) {
 		SeedDistrict(d);
 	}	
 }
@@ -108,6 +113,8 @@ var gameOverRun=false;
 //runs every frame
 function update(timestamp){
 	console.log("running")
+	console.log(districts[0].tiles.length)
+	console.log(gameOverRun)
 	if (districts[0].tiles.length!=0) {
 		diamond_fill();
 		ReleaseNonContiguous();
@@ -117,6 +124,7 @@ function update(timestamp){
 		}
 	}
 	else if (!gameOverRun) {
+
 		DrawWinners();
 		gameOverRun=true;
 		for (var i=0; i<districtCount; i++) {
@@ -226,7 +234,7 @@ function DrawWinners() {
 //create a checkerboard two dimensional array grid 
 function InitializeGrid() {
 	grid=[];
-	
+
 	for (var x=0; x<gridWidth; x++) {
 		grid[x]=[]
 		for (var y=0; y<gridHeight; y++) {
