@@ -31,7 +31,10 @@
 var color = Chart.helpers.color;
 var chart;
 var barChartData = {
-            labels: ["4-3","5-2","6-1","7-0"],
+            // labels: ["4-3","5-2","6-1","7-0"],
+            // labels: ["0","1","2","3","4","5","6","7"],
+            labels: [],
+
             datasets: [{
                 label: 'Republican Wins',
                 backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
@@ -46,7 +49,6 @@ var barChartData = {
                 borderColor: window.chartColors.blue,
                 borderWidth: 1,
                 data: [
-
                 ]
             }]
 
@@ -55,7 +57,7 @@ function InitChart() {
             var ctxChart = document.getElementById('myChart').getContext('2d');
             chart = new Chart(ctxChart, {
                 responsive:true,
-                type: 'bar',
+                type: 'horizontalBar',
                 data: barChartData,
                 options: {
                     legend: {
@@ -64,6 +66,14 @@ function InitChart() {
                     title: {
                         display: true,
                         text: 'Data Chart'
+                    },
+                    scales: {
+                        xAxes: [{
+                            stacked: true
+                        }],
+                        yAxes: [{
+                            stacked: true
+                        }]
                     }
                 }
             });

@@ -1,54 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Gerrymandering Web App Prototype</title>
-	<style type="text/css">
-	canvas {
-		border:1px solid;
-    	display: inline-block;
-	}
-	button {
-    	display: inline-block;
-		width: 100px;		
-	}
-	.chart-container {
-    	width: 900px;
-    	height:200px
-	}
-	</style>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-    <script src="color-scheme.js"></script>
-
+	<title>Gerrymandering Web App Main Page</title>
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+ 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-<!-- 	<img id="voter" src="voter.png" width="10px" height="10px">
- -->	<img id="demImg" src="demVoter.png" width="10px" height="10px">
-	<img id="repImg" src="repVoter.png" width="10px" height="10px">
-
-	<div>
-
-		<canvas id="myCanvas" width="800px" height="800px">
-		Your browser does not support the HTML5 canvas tag.</canvas>
-		<button id="NewMap">New Map</button>
-		<button id="ResetMap">New Districts</button>	
+	<div class="mainContent">
+	    <div class="nav">
+	    	<h1>Welcome!</h1>
+	    	<a href="gerrymander.html">Main Project</a>
+			<a href="reference.html">Reference Page</a>
+	    </div>
 	</div>
-
-
-	
-	<h1 id="win">Winner was:</h1>
-	<div class="chart-container">
-	    <canvas id="myChart"></canvas>
-
-	</div>
-
-
-<!-- 	//<script src="Agent.js"></script> -->
-<!-- 	<script src="Model.js"></script> -->
-	
-	<script src="script.js"></script>
-
-	<script src="chart.js"></script>
 
 </body>
 </html>

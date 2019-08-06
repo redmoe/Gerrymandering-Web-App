@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Gerrymandering Web App Prototype</title>
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+ 	<link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script src="color-scheme.js"></script>	
+</head>
+<body>
+	<img id="demImg" src="demVoterPix.png" width="10px" height="10px" style="display:none" >
+	<img id="repImg" src="repVoterPix.png" width="10px" height="10px" style="display:none" >
+	<div class="mainContent">
+		<h1>WHAT IS IT?</h1>
+		<p>This model randomly generates district maps for a square state using standard districting rules - equal populations and contiguous districts. A two-party system is assumed, with blue representing an individual who will vote for the democratic candidate and red representing an individual who will vote for the republican candidate. Election outcomes of each district are calculated using a first-past-the-post voting method and are shown on the square map in the party color. The outcomes are aggregated to display a histogram of the total districts won over many random maps.</p>
+		<div>
+			<div class="float">
+				<canvas id="myCanvas" width="800px" height="800px">
+				Your browser does not support the HTML5 canvas tag.</canvas>			
+			</div>
+			<div class="float">
+			<p>Number of Voters:</p>	 
+	  	    <input id="numVotersSlide" type="range" min="50" max="150" value="100">
+	  	    <div id="numVotersAmount">100</div>
+	  	    <p>Number of Cites:</p>	 
+	  	    <input id="numCitiesSlide" type="range" min="1" max="3" value="1">	
+	  	    <div id="numCitiesAmount">1</div>
+			<p>Number of Districts:</p>
+	  	    <input id="numDistrictsSlide" type="range" min="2" max="10" value="7">	
+	  	    <div id="numDistrictsAmount">7</div>
+			<p>Democrat Percentage:</p>	
+	  		<input id="demPercSlide" type="range" min="0" max="100" value="50">
+	  		<div id="demPercAmount">50</div>
+			<p>Number of Maps to Generate:</p>	
+	  		<input id="mapGenSlider" type="range" min="1" max="100" value="2">
+	  		<div id="mapGenAmount">1</div>
+			<button id="NewMaps">New Maps</button>
+			<!-- <button id="NewMap">New Map</button> -->
+			<button id="ResetMap">New Districts</button>
+			<select id="ColorModeSelect">
+			  <option value="Districts">Districts</option>				
+			  <option value="PopulationDensity">Population Density</option>
+			  <option value="PredictedWinner">Predicted Winner</option>
+			  <option value="Competitiveness">Competitiveness</option>
+			  <option value="Winner">Winner</option>
+			</select>	
+			<h1 id="win">Winner was:</h1>
+			</div>
+		</div>
+		<div class="chart-container">
+		    <canvas id="myChart"></canvas>
+		  	<canvas id="logChart"></canvas>
+
+		</div>
+		<script src="script.js"></script>
+		<script src="chart.js"></script>
+		<script src="logChart.js"></script>
+
+	</div>
+
+</body>
+</html>
