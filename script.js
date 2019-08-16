@@ -479,16 +479,28 @@ function arrayMax(arr) {
 };
 
 var BrushModes={
-	District:function (x,y) {
+	District:function (button,x,y) {
 		// grid[Math.floor(x)][Math.floor(y)].district=1
-		ChangeTileDistrict(Math.floor(x),Math.floor(y),1)
+		if (button==0) {
+			ChangeTileDistrict(Math.floor(x),Math.floor(y),Current_BrushVar)
+		}
+		else if (button==2) {
+			Current_BrushVar=GetGridProperty(Math.floor(x),Math.floor(y),"district")
+		}
 	},
-	Voter:function (x,y) {
+	Voter:function (button,x,y) {
 		// grid[Math.floor(x)][Math.floor(y)].district=1
-		CreateVoter(0,x,y)
+		if (button==0) {
+				CreateVoter(Current_BrushVar,x,y)
+		}
+		else if (button==2) {
+			Current_BrushVar=GetNearest({x:x,y:y},voters).party
+			// console.log(GetNearest([x=x,y=y],voters).party)
+		}
 	},
 }
 var Current_BrushMode=BrushModes["District"]
+var Current_BrushVar=0
 
 
 //create a checkerboard two dimensional array grid 
@@ -588,6 +600,26 @@ function FloodDistricts(num_districts) {
     	FloodFill(rx,ry,0,d,50)
   	}
 }
+
+function GetNearest(start,array) {
+	let nearest=array[0]
+	for (i=0;i<array.length;i++) {
+		if (distance(start,array[i])<distance(start,nearest)) {
+			nearest=array[i]
+		}
+	}
+	return nearest
+}
+
+function distance(a,b) {
+  let dx=a.x-b.x
+  let dy=a.y-b.y
+  		// console.log(a)
+
+  return Math.sqrt(dx*dx+dy*dy)
+}
+
+
 
 
 function shuffle(array) {
@@ -871,10 +903,18 @@ function getCursorPosition(canvas, event) {
     let x = event.clientX - rect.left
     let y = event.clientY - rect.top
     console.log("x: " + x + " y: " + y)
-    Current_BrushMode(x/gridSize,y/gridSize)
+    console.log(event.button)
+    // if (event.button==0) {
+
+    // }
+    // else if (event.button=2) {
+
+    // }
+    Current_BrushMode(event.button,x/gridSize,y/gridSize)
 }
 
 // const canvas = document.querySelector('canvas')
-c.addEventListener('click', function(e) {
+c.addEventListener('mousedown', function(e) {
     getCursorPosition(c, e)
 })
+// c.addEventListener('onContextMenu',function(e) {return false})
