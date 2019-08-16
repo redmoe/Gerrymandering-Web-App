@@ -19,13 +19,16 @@
 //     options: {}
 // });
   window.chartColors = {
-      red: 'rgb(255, 99, 132)',
-      orange: 'rgb(255, 159, 64)',
-      yellow: 'rgb(255, 205, 86)',
-      green: 'rgb(75, 192, 192)',
-      blue: 'rgb(54, 162, 235)',
-      purple: 'rgb(153, 102, 255)',
-      grey: 'rgb(201, 203, 207)'
+      // red: 'rgb(255, 99, 132)',
+       red: 'rgb(255,0,0)',
+
+      // orange: 'rgb(255, 159, 64)',
+      // yellow: 'rgb(255, 205, 86)',
+      // green: 'rgb(75, 192, 192)',
+      // blue: 'rgb(54, 162, 235)',
+      blue: 'rgb(0,0, 255)',
+      // purple: 'rgb(153, 102, 255)',
+      // grey: 'rgb(201, 203, 207)'
     };       
 
 var color = Chart.helpers.color;
@@ -35,22 +38,26 @@ var barChartData = {
             // labels: ["0","1","2","3","4","5","6","7"],
             labels: [],
 
-            datasets: [{
+            datasets: [ {
+                label: 'Democrat Wins',
+                // backgroundColor: color(window.chartColors.blue).alpha(0.5).rgbString(),
+                // borderColor: window.chartColors.blue,
+                backgroundColor: window.chartColors.blue,
+                borderWidth: 1,
+                data: [
+                ]
+            },
+            {
                 label: 'Republican Wins',
-                backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
-                borderColor: window.chartColors.red,
+                // backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
+                // borderColor: window.chartColors.red,
+                backgroundColor: window.chartColors.red,
                 borderWidth: 1,
                 data: [
 
                 ]
-            }, {
-                label: 'Democrat Wins',
-                backgroundColor: color(window.chartColors.blue).alpha(0.5).rgbString(),
-                borderColor: window.chartColors.blue,
-                borderWidth: 1,
-                data: [
-                ]
-            }]
+            },
+            ]
 
         };
 function InitChart() {

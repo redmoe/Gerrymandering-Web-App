@@ -63,21 +63,40 @@ slide.oninput = function() {
 }
 slide.onchange = function() {
     districtCount=this.value;
+    logChart.data.labels=[]
+    logChart.data.datasets[0].data=[]
+    logChart.data.datasets[1].data=[]
+    for (i=0;i<=districtCount;i++) {
+    	logChart.data.labels.push(String(i))
+    	logChart.data.datasets[0].data.push(0)
+    	logChart.data.datasets[1].data.push(0)
+    }
+    logChart.update()
     calculateValues()
 }
 
 var mapCount=1
 $("#mapGenSlider").on('input', function() {
+	mapCount=$("#mapGenSlider").val()	
     $("#mapGenAmount").html(this.value);
 });
 
-$("#mapGenSlider").on('change', function() {
-    mapCount=this.value;
-    calculateValues()
-})
+// $("#mapGenSlider").on('change', function() {
+//     mapCount=this.value;
+// })
 
 $("#ColorModeSelect").on('input', function() {
 	Current_ColorMode=ColorModes[this.value]
+	$("#ColorModeDesc").html(ColorDesc[this.value])
+})
+
+$("#BrushSelect").on('input', function() {
+	Current_BrushMode=BrushModes[this.value]
+})
+
+var displayVoters=true
+$("#VoterToggle").click(function(){
+	displayVoters=!displayVoters
 })
 
 var districts=[]
@@ -98,8 +117,12 @@ function calculateValues() {
 	totalRepublicans=Math.floor(numberOfVoters*(1-democratPercentage));
 	totalDemocrats=Math.floor(numberOfVoters*democratPercentage);
 	requiredVoters=districtCount/numberOfVoters;
+	chart.data.datasets[0].data=[]
+	chart.data.datasets[1].data=[]
+	chart.update()
+	mapCount=$("#mapGenSlider").val()	
+	mapGenFunction()
 }
-calculateValues()
 function CreateCityVoters(number,party,deviation,startX,startY) {
 	for (var i=0; i<number; i++) {
 		var y=expoDistribution(deviation)*(Math.random()<.5 ? -1 : 1)+startX
@@ -151,10 +174,13 @@ var worm={x:0,y:0,dx:1,dy:0,c:0};
 //runs the start of the program
 window.onload=function setup() {
 	InitChart()
-    NewMap();
+	mapGenFunction=NewMap
+	calculateValues()
+    // mapGenFunction();
 	update();	
 }
-function ResetDistricts() {
+var ResetDistricts=function() {
+	startTime = new Date();
 	gameOverRun=false;
 	CreateDistrictPrimatives()
 	for (var x=0; x<gridWidth; x++) {
@@ -167,10 +193,8 @@ function ResetDistricts() {
 		SeedDistrict(d);
 	}	
 }
-var Current_ColorMode
-function NewMap() {
-	Current_ColorMode=ColorModes["Districts"]
-	// $("#ColorModeSelect").innerHTML="Districts"
+
+var BlankMap=function() {
     var scheme = new ColorScheme;
     scheme.from_hue(Math.random()*255).scheme('triade').variation('pastel')
     districtColors=scheme.colors()
@@ -178,55 +202,76 @@ function NewMap() {
 	gameOverRun=false;
 	CreateDistrictPrimatives()
 	InitializeGrid()
+	startTime = new Date();
+}
+
+var NewMap=function () {
+	// Current_ColorMode=ColorModes["Districts"]
+	// $("#ColorModeSelect").innerHTML="Districts"
+	BlankMap()
 	// for x=0; x<cityCount; x++ do
 	var cityX=(Math.random()*gridWidth/4-gridWidth/8)+gridWidth/2
 	var cityY=(Math.random()*gridHeight/4-gridWidth/8)+gridHeight/2
-	console.log(cityX+" "+cityY)
-	// console.log(gridWidth)
 	CreateCityVoters(totalDemocrats*democratUrban,-1,1,cityX,cityY)
 	CreateCityVoters(totalRepublicans*republicanUrban,1,1,cityX,cityY)
 	CreateUniformVoters(totalDemocrats*(1-democratUrban),-1);
 	CreateUniformVoters(totalRepublicans*(1-republicanUrban),1);
-	startTime = new Date();
+	
 	for (var d=1; d<=districtCount;d++) {
 		SeedDistrict(d);
 	}	
 }
-
+var mapGenFunction=NewMap
 $(document).on("keypress", function (e) {
-	ResetDistricts();
+	// ResetDistricts();
+	pause=!pause
 });
+
+$("#pause").click(function() {
+	pause=!pause
+	$("#pause").html(pause ? "Play" : "Pause")
+})
 
 $( "#ResetMap" ).click(function() {
-	ResetDistricts();
+	mapCount=$("#mapGenSlider").val()
+	mapGenFunction=ResetDistricts;
+	mapGenFunction()
 });
 
-$( "#NewMap" ).click(function() {
-	NewMap();
+$( "#BlankMap" ).click(function() {
+	mapCount=$("#mapGenSlider").val()
+	mapGenFunction=BlankMap
+	mapGenFunction()
 });
+
+// $( "#NewMap" ).click(function() {
+// 	NewMap();
+// });
 
 $( "#NewMaps" ).click(function() {
 	mapCount=$("#mapGenSlider").val()
-    NewMap();
+	mapGenFunction=NewMap
+    mapGenFunction();
+
 });
 var drawGame=true
 var gameOverRun=false;
 //runs every frame
+var pause=false
 function update(timestamp){
-	if (districts[0].tiles.length!=0) {
-		DiamondFill();
-		ReleaseNonContiguous();
-	}
-	else if (!gameOverRun) {
-		Current_ColorMode=ColorModes["Winner"]		
-		DrawWinners();
-		gameOverRun=true;
-		for (var i=0; i<districtCount; i++) {
-			console.log(districts[i].poll);
+	if (!pause) {
+		if (districts[0].tiles.length!=0) {
+			DiamondFill();
+			ReleaseNonContiguous();
 		}
-		mapCount--;
-		if (mapCount>0) {
-			NewMap()
+		else if (!gameOverRun) {
+			DrawWinners();
+			gameOverRun=true;
+			mapCount--;
+			if (mapCount>0) {
+				mapGenFunction()
+			}
+			EndStats()
 		}
 	}
 	if (drawGame) {
@@ -238,11 +283,12 @@ function update(timestamp){
 
 //runs at a set time
 function draw() {
-	var frame=grid;
 	DrawDistricts(grid);
 	drawDistrictBorders()
 	drawGame=true;
-	DrawVoters(grid);
+	if (displayVoters) {
+		DrawVoters(grid);
+	}
 	if (gameOverRun) {
 		DrawWinnersUI()
 	}	
@@ -298,11 +344,16 @@ function GetDistrictCenter(district) {
 	return {x:x,y:y}
 }
 
+
 function DrawWinners() {
 	var republicanWins=0;
 	var democratWins=0;
 	for (var i=1; i<=districtCount;i++) {
-		if (districts[i].poll<0) {
+		if (districts[i].poll==0) {
+			districts[i].poll+=Math.random()>.5 ? 1 : -1
+			console.log("tossed a coin for district "+i)
+		}
+		if (districts[i].poll>0) {
 			republicanWins++;
 		}
 		else {
@@ -312,17 +363,14 @@ function DrawWinners() {
 	var winCat=Math.abs(republicanWins-democratWins)
 	// chart.data.datasets[0].data[republicanWins]-=1
 	// chart.data.datasets[1].data[democratWins]+=1
-	chart.data.datasets[0].data.push(republicanWins)
-	chart.data.datasets[1].data.push(democratWins)	
+	chart.data.datasets[0].data.push(democratWins)
+	chart.data.datasets[1].data.push(republicanWins)	
 	// addData(chart, "a", republicanWins)	
-		console.log(chart.data.datasets[1])
 	generationTotal++;
 	chart.data.labels.push(generationTotal)
 	// chart.data.datasets[1].label.push("B")
 	logChart.data.datasets[0].data[democratWins]+=1
 	logChart.data.datasets[1].data[republicanWins]+=1
-
-	console.log("wins "+winCat)
 	logChart.update()
 	chart.update()
 	var txt = document.getElementById("win");
@@ -339,6 +387,15 @@ function DrawWinnersUI() {
 			ctx.fillText(stats[f],pos.x*gridSize-ctx.measureText(stats[f]).width/2,pos.y*gridSize+f*(gridSize/2));
 		}
 	}
+}
+
+var ColorDesc={
+	Competitiveness:"Displays how close the poll is between parties.",
+	PredictedWinner:"Shows who will win the district with current votes.",
+	PopulationDensity:"Shows how much space to voters a district has.",
+	Districts:"Displays diffrent districts in pleasing colors.",
+	Compactness:"Shows how spread out a district.",
+	WastedVote:"Displays the perentage of the that was wasted."
 }
 
 var ColorModes={
@@ -364,9 +421,9 @@ var ColorModes={
 		g=tileDistrict.voters/tileDistrict.tiles.length*255
 		return rgb(0,g,0)
 	},
-	Winner:function(tile) {
-		return districts[tile.district].poll>0 ? rgb(tile.district*32+20,0,0) : rgb(0,0,tile.district*32+20);
-	},
+	// Winner:function(tile) {
+	// 	return districts[tile.district].poll>0 ? rgb(tile.district*32+20,0,0) : rgb(0,0,tile.district*32+20);
+	// },
 	Districts:function(tile) {
 		tileDistrict=districts[tile.district]
 		if (tile.district!=0) {
@@ -375,8 +432,64 @@ var ColorModes={
 		else {
 			return (tile.x+tile.y)%2==0 ? "#000000" : "#505050";
 		}
+	},
+	Compactness:function(tile) {
+		tileDistrict=districts[tile.district].tiles
+		let posX=tileDistrict.sort(function(a, b){
+			return a.x-b.x
+		})
+		let width=Math.abs(posX[0].x-posX[posX.length-1].x)
+
+		let posY=tileDistrict.sort(function(a, b){
+			return a.y-b.y
+		})
+		let height=Math.abs(posY[0].y-posY[posY.length-1].y)
+		let ratio=width/height
+		ratio-=Math.floor(ratio)
+		return rgb(ratio*255,0,0)
+	},
+	WastedVote:function(tile) {
+		tileDistrict=districts[tile.district]
+		repVoters=(tileDistrict.voters+tileDistrict.poll)/2
+		demVoters=tileDistrict.voters-repVoters
+		perc=(tileDistrict.voters-Math.abs(repVoters-demVoters))/tileDistrict.voters
+		return rgb(perc*255,0,0)
 	}
 }
+var Current_ColorMode=ColorModes["Districts"]
+
+function arrayMin(arr) {
+  var len = arr.length, min = Infinity;
+  while (len--) {
+    if (arr[len] < min) {
+      min = arr[len];
+    }
+  }
+  return min;
+};
+
+function arrayMax(arr) {
+  var len = arr.length, max = -Infinity;
+  while (len--) {
+    if (arr[len] > max) {
+      max = arr[len];
+    }
+  }
+  return max;
+};
+
+var BrushModes={
+	District:function (x,y) {
+		// grid[Math.floor(x)][Math.floor(y)].district=1
+		ChangeTileDistrict(Math.floor(x),Math.floor(y),1)
+	},
+	Voter:function (x,y) {
+		// grid[Math.floor(x)][Math.floor(y)].district=1
+		CreateVoter(0,x,y)
+	},
+}
+var Current_BrushMode=BrushModes["District"]
+
 
 //create a checkerboard two dimensional array grid 
 function InitializeGrid() {
@@ -552,26 +665,29 @@ function DiamondFill() {
 	//issue with generating single district maps
 	if (chosen[0].district==0) {
 		chosen=order[1];
-	}	
-	chosen=chosen.filter(function(value){
-		return GetSig(value.x,value.y,value.district)<4
-	})
-	//then filter to see if any tiles neighbor empty districts
-	let emptyNeighbors=chosen.filter(function(value){
-		return GetSig(value.x,value.y,0)>0
-	})
-	let r=0
-	let chosenTile
+	}
 
-	if (emptyNeighbors.length!=0 && Math.random()<chanceToPickNonEmpty) {
-		r=Math.floor(Math.random()*emptyNeighbors.length)
-		chosenTile=emptyNeighbors[r]
-	}
-	else {
-		r=Math.floor(Math.random()*chosen.length)
-		chosenTile=chosen[r]
-	}
-	FillNeighbors(chosenTile.x,chosenTile.y,chosenTile.district)
+	if (chosen.length!=0) {		
+		chosen=chosen.filter(function(value){
+			return GetSig(value.x,value.y,value.district)<4
+		})
+		//then filter to see if any tiles neighbor empty districts
+		let emptyNeighbors=chosen.filter(function(value){
+			return GetSig(value.x,value.y,0)>0
+		})
+		let r=0
+		let chosenTile
+
+		if (emptyNeighbors.length!=0 && Math.random()<chanceToPickNonEmpty) {
+			r=Math.floor(Math.random()*emptyNeighbors.length)
+			chosenTile=emptyNeighbors[r]
+		}
+		else {
+			r=Math.floor(Math.random()*chosen.length)
+			chosenTile=chosen[r]
+		}
+		FillNeighbors(chosenTile.x,chosenTile.y,chosenTile.district)
+	}	
 }
 
 function ReleaseNonContiguous() {
@@ -652,6 +768,7 @@ function ChangeTileDistrict(x,y,replace) {
 	self.district=replace;
 }
 
+// var colors=["red","green","blue","yellow"]
 function drawDistrictBorders() {
 	for (x=0;x<gridWidth;x++) {
 		for (y=0;y<gridHeight;y++) {
@@ -660,16 +777,54 @@ function drawDistrictBorders() {
 				var otherDistrict=GetGridProperty(x+dirX[i],y+dirY[i],"district")
 				if (otherDistrict && otherDistrict!=currentDistrict) {
 				    ctx.fillStyle="white"
-				    var w = gridSize*dirX[i]
-				    var h = gridSize*dirY[i]
+				    // var w = gridSize*dirX[i]
+				    // var h = gridSize*dirY[i]
 				    //correct for edges gridSize/20
-				    var w=gridSize/10+gridSize*Math.abs(dirY[i])
-				    var h=gridSize/10+gridSize*Math.abs(dirX[i])
+				    let w=gridSize/8+Math.abs(dirY[i])*gridSize
+				    let h=gridSize/8+Math.abs(dirX[i])*gridSize
+				 //    if (Math.abs(dirY[i])!=0) {
+				 //    	w=gridSize
+				 //    }
+					// if (Math.abs(dirX[i])!=0) {
+				 //    	h=gridSize
+				 //    }			    
+				    let x_center=-gridSize/16
+				    let y_center=-gridSize/16
+
+				    // let x_center=0
+				    // let y_center=0
+				    				 //    if (dirY[i]==1) {
+				 //    	x_center-=gridSize/16
+				 //    	// w+=gridSize/10
+				 //    }
+					// else if (dirX[i]==-1) {
+				 //    	x_center+=gridSize/16
+
+				 //    }		
+			    	// if (dirY[i]==1) {
+				    // 	x_center+=gridSize/8
+				    // 	y_center-=gridSize/16
+				    // }
+				    // else if (dirY[i]==-1) {
+				    // 	x_center-=gridSize/8
+				    // 	y_center+=gridSize/16
+				    // }
+
+			    	// if (dirX[i]==1) {
+				    // 	y_center-=gridSize/8
+				    // 	x_center+=gridSize/16
+				    // }
+				    // else if (dirX[i]==-1) {
+				    // 	y_center+=gridSize/8
+				    // 	x_center-=gridSize/16
+				    // }			    -sine(dirX[i])*w-sine(dirY[i])*h
 			        ctx.fillRect(
-			    	x*gridSize+sine(dirX[i])*gridSize-sine(dirX[i])*w,
-			    	y*gridSize+sine(dirY[i])*gridSize-sine(dirY[i])*h,
+			    	x*gridSize+sine(dirX[i])*gridSize+x_center,
+			    	y*gridSize+sine(dirY[i])*gridSize+y_center,
 			    	w,
-			    	h);           		
+			    	h);
+			    	// ctx.fillStyle="white"
+			    	// ctx.fillRect(x*gridSize,y*gridSize,1,1);
 				}
 			}
 		}
@@ -684,3 +839,29 @@ function sine(a) {
 		return 1
 	}
 }
+
+// c.addEventListener('click', function() { }, false);
+
+var elem = c,
+    elemLeft = elem.offsetLeft,
+    elemTop = elem.offsetTop,
+    context = elem.getContext('2d'),
+    elements = [];
+
+// Add event listener for `click` events.
+elem.addEventListener('click', function(event) {
+    var x =(event.pageX-elemLeft)/gridSize,
+        y =(event.pageY-elemTop)/gridSize;
+    // console.log("x"+x+" y"+y)
+    // CreateVoter(0,x,y)
+    Current_BrushMode(x,y)
+    // console.log(grid[Math.floor(x/gridSize)][Math.floor(y/gridSize)])
+    // Collision detection between clicked offset and element.
+    // elements.forEach(function(element) {
+    //     if (y > element.top && y < element.top + element.height 
+    //         && x > element.left && x < element.left + element.width) {
+    //         alert('clicked an element');
+    //     }
+    // });
+
+}, false);

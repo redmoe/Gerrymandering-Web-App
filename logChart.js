@@ -6,8 +6,10 @@ var logChart = new Chart(ctxLog, {
         datasets: [{
             label: 'Democrat votes',
             data: [0,0,0,0,0,0,0,0],
-            backgroundColor: color(window.chartColors.blue).alpha(0.5).rgbString(),
-            borderColor: window.chartColors.blue,
+            // backgroundColor: color(window.chartColors.blue).alpha(0.5).rgbString(),
+            backgroundColor:window.chartColors.blue,
+
+            // borderColor: window.chartColors.blue,
             // backgroundColor: [
             //     'rgba(255, 99, 132, 0.7)',
             //     'rgba(54, 162, 235, 0.7)',
@@ -28,8 +30,9 @@ var logChart = new Chart(ctxLog, {
         },{
             label: 'Republican votes',
             data: [0,0,0,0,0,0,0,0],
-            backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
-            borderColor: window.chartColors.red,
+            // backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
+            // borderColor: window.chartColors.red,
+            backgroundColor: window.chartColors.red,
             borderWidth: 1
         }]
     },
@@ -39,7 +42,7 @@ var logChart = new Chart(ctxLog, {
       stacked: true,
             }],           
             yAxes: [{
-                type: 'logarithmic',
+                // type: 'logarithmic',
                 stacked: true,
 
                 ticks: {

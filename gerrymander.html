@@ -20,38 +20,83 @@
 				Your browser does not support the HTML5 canvas tag.</canvas>			
 			</div>
 			<div class="float">
-			<p>Number of Voters:</p>	 
+			<p class="tooltip">Number of Voters:
+				<span class="tooltiptext">Increase or decrease the number of voters in the area
+				</span>
+			</p>	 
 	  	    <input id="numVotersSlide" type="range" min="50" max="150" value="100">
 	  	    <div id="numVotersAmount">100</div>
-	  	    <p>Number of Cites:</p>	 
+	  	    <p class="tooltip">
+	  	    	Number of Cites:
+	  	    	<span class="tooltiptext">Change how many cities to generate.</span>
+	  	    </p>	 
 	  	    <input id="numCitiesSlide" type="range" min="1" max="3" value="1">	
 	  	    <div id="numCitiesAmount">1</div>
-			<p>Number of Districts:</p>
+			<p class="tooltip">
+				Number of Districts:
+				<span class="tooltiptext">Modifies how many districts the area is divide into</span>
+			</p>
 	  	    <input id="numDistrictsSlide" type="range" min="2" max="10" value="7">	
 	  	    <div id="numDistrictsAmount">7</div>
-			<p>Democrat Percentage:</p>	
+			<p class="tooltip">
+				Democrat Percentage:
+				<span class="tooltiptext">How much of the population will vote Democrat, with the reminder voting Republican.</span>
+			</p>	
 	  		<input id="demPercSlide" type="range" min="0" max="100" value="50">
 	  		<div id="demPercAmount">50</div>
-			<p>Number of Maps to Generate:</p>	
+			<p class="tooltip">
+				Number of Maps to Generate:
+				<span class="tooltiptext">How many maps to consecutively generate when the New Maps or New Districts button is pressed.</span>
+			</p>	
 	  		<input id="mapGenSlider" type="range" min="1" max="100" value="2">
 	  		<div id="mapGenAmount">1</div>
-			<button id="NewMaps">New Maps</button>
+			<button id="NewMaps" class="tooltip">
+				New Maps
+				<span class="tooltiptext">Generates new maps when pressed with new voter distribution.</span>
+			</button>
 			<!-- <button id="NewMap">New Map</button> -->
-			<button id="ResetMap">New Districts</button>
-			<select id="ColorModeSelect">
-			  <option value="Districts">Districts</option>				
-			  <option value="PopulationDensity">Population Density</option>
-			  <option value="PredictedWinner">Predicted Winner</option>
-			  <option value="Competitiveness">Competitiveness</option>
-			  <option value="Winner">Winner</option>
-			</select>	
-			<h1 id="win">Winner was:</h1>
+			<button id="ResetMap" class="tooltip">
+				New Districts
+				<span class="tooltiptext">Redistricts the population without modifying how they are spread out.</span>
+			</button>
+			<button id="BlankMap" class="tooltip">
+				Blank Map
+				<span class="tooltiptext">Create a blank map.</span>
+			</button>			
+			<p>
+				Map Color Mode
+				<select id="ColorModeSelect">
+				  <option value="Districts">Districts</option>				
+				  <option value="PopulationDensity">Population Density</option>
+				  <option value="PredictedWinner">Predicted Winner</option>
+				  <option value="Competitiveness">Competitiveness</option>
+				  <option value="Compactness">Compactness</option>
+				  <!-- <option value="Winner">Winner</option> -->
+				  <option value="WastedVote">Wasted Votes</option>
+				</select>
+
+			</p>
+			<p id="ColorModeDesc">Displays diffrent districts in pleasing colors.</p>
+			<p>
+				Brush Mode
+				<select id="BrushSelect">
+				  <option value="District">District</option>				
+				  <option value="Voter">Voter</option>
+				  <option value="City">City</option>
+
+				</select>			
+			</p>
+			<h1 id="win"></h1>
 			</div>
 		</div>
+		<label id="VoterToggle" class="switch">
+		  <input type="checkbox" checked>Display Voters?
+		  <span class="slider"></span>
+		</label>
+		<button id="pause">Pause</button>
 		<div class="chart-container">
 		    <canvas id="myChart"></canvas>
 		  	<canvas id="logChart"></canvas>
-
 		</div>
 		<script src="script.js"></script>
 		<script src="chart.js"></script>
