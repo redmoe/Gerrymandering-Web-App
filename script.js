@@ -842,26 +842,39 @@ function sine(a) {
 
 // c.addEventListener('click', function() { }, false);
 
-var elem = c,
-    elemLeft = elem.offsetLeft,
-    elemTop = elem.offsetTop,
-    context = elem.getContext('2d'),
-    elements = [];
+// var elem = c,
+//     elemLeft = elem.offsetLeft,
+//     elemTop = elem.offsetTop,
+//     context = elem.getContext('2d'),
+//     elements = [];
 
 // Add event listener for `click` events.
-elem.addEventListener('click', function(event) {
-    var x =(event.pageX-elemLeft)/gridSize,
-        y =(event.pageY-elemTop)/gridSize;
-    // console.log("x"+x+" y"+y)
-    // CreateVoter(0,x,y)
-    Current_BrushMode(x,y)
-    // console.log(grid[Math.floor(x/gridSize)][Math.floor(y/gridSize)])
-    // Collision detection between clicked offset and element.
-    // elements.forEach(function(element) {
-    //     if (y > element.top && y < element.top + element.height 
-    //         && x > element.left && x < element.left + element.width) {
-    //         alert('clicked an element');
-    //     }
-    // });
+// elem.addEventListener('click', function(event) {
+//     var x =(event.pageX-elemLeft)/gridSize,
+//         y =(event.pageY-elemTop)/gridSize;
+//     // console.log("x"+x+" y"+y)
+//     // CreateVoter(0,x,y)
+//     Current_BrushMode(x,y)
+//     // console.log(grid[Math.floor(x/gridSize)][Math.floor(y/gridSize)])
+//     // Collision detection between clicked offset and element.
+//     // elements.forEach(function(element) {
+//     //     if (y > element.top && y < element.top + element.height 
+//     //         && x > element.left && x < element.left + element.width) {
+//     //         alert('clicked an element');
+//     //     }
+//     // });
 
-}, false);
+// }, false);
+
+function getCursorPosition(canvas, event) {
+    let rect = canvas.getBoundingClientRect()
+    let x = event.clientX - rect.left
+    let y = event.clientY - rect.top
+    console.log("x: " + x + " y: " + y)
+    Current_BrushMode(x/gridSize,y/gridSize)
+}
+
+// const canvas = document.querySelector('canvas')
+c.addEventListener('click', function(e) {
+    getCursorPosition(c, e)
+})
