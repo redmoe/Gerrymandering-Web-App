@@ -19,6 +19,6 @@
   "dependencies": {
     "chart.js": "^2.8.0",
     "color-scheme": "^1.0.1",
-    "jquery": "^3.4.1"
+    "jquery": "^3.5.0"
   }
 }
